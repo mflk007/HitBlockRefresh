@@ -6,7 +6,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.util.AttributeSet;
@@ -14,10 +13,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -25,7 +20,6 @@ import android.widget.TextView;
 /**
  * Created by Hitomis on 2016/3/1.
  */
-@SuppressLint("NewApi")
 public class HitBlockHeader extends FrameLayout {
 
     private Context mContext;
@@ -52,18 +46,18 @@ public class HitBlockHeader extends FrameLayout {
     public HitBlockHeader(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mContext = context;
-        initView();
+        initView(attrs);
     }
 
-    private void initView() {
+    private void initView(AttributeSet attrs) {
 
-        hitBlockView = new HitBlockView(mContext);
+        hitBlockView = new HitBlockView(mContext, attrs);
         hitBlockView.postStatus(HitBlockView.STATUS_GAME_PREPAR);
         addView(hitBlockView);
 
         curtainReLayout = new RelativeLayout(mContext);
         maskReLayout = new RelativeLayout(mContext);
-        maskReLayout.setBackgroundColor(Color.parseColor("#2A2A2A"));
+        maskReLayout.setBackgroundColor(Color.parseColor("#3A3A3A"));
 
         topMaskView = createMaskTextView("Pull to Break Out!", 20, Gravity.BOTTOM);
         bottomMaskView = createMaskTextView("Scrooll to move handle", 18, Gravity.TOP);
@@ -85,7 +79,7 @@ public class HitBlockHeader extends FrameLayout {
     }
 
     private void coverMaskView() {
-        LayoutParams maskLp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LayoutParams maskLp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         maskLp.topMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
         maskLp.bottomMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
 
@@ -179,6 +173,10 @@ public class HitBlockHeader extends FrameLayout {
         topMaskView.setVisibility(View.VISIBLE);
         bottomMaskView.setVisibility(View.VISIBLE);
         maskReLayout.setVisibility(View.VISIBLE);
+    }
+
+    public void postComplete() {
+        hitBlockView.postStatus(HitBlockView.STATUS_GAME_FINISHED);
     }
 
 }
