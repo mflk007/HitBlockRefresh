@@ -48,18 +48,27 @@
         refreshView.finishRefreshing();
 
 # 自定义属性
-        <attr name="block_horizontal_num" format="integer" />
-        <attr name="ball_speed" format="integer">
-            <enum name="low" value="3" />
-            <enum name="medium" value="6" />
-            <enum name="fast" value="9" />
-        </attr>
-        <attr name="block_color" format="color" />
-        <attr name="ball_color" format="color" />
-        <attr name="racket_color" format="color" />
+    <attr name="block_horizontal_num" format="integer" />
+    <attr name="ball_speed" format="integer">
+        <enum name="low" value="3" />
+        <enum name="medium" value="6" />
+        <enum name="fast" value="9" />
+    </attr>
+    <attr name="block_color" format="color" />
+    <attr name="ball_color" format="color" />
+    <attr name="racket_color" format="color" />
 
-        block_horizontal_num ：矩形块列数
-        ball_speed : 小球弹射速度
-        block_color : 矩形块颜色
-        ball_color : 小球颜色
-        racket_color : 挡板颜色
+    block_horizontal_num ：矩形块列数
+    ball_speed : 小球弹射速度
+    block_color : 矩形块颜色
+    ball_color : 小球颜色
+    racket_color : 挡板颜色
+
+#Thanks
+UI设计来自于：https://github.com/dasdom/BreakOutToRefresh
+
+#Licence
+Hitomis
+
+
+
