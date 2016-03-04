@@ -34,13 +34,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onRefresh() {
                 try {
+                    // 模拟网络请求耗时动作
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 mHandler.sendEmptyMessage(0);
             }
-        }, 0);
+        });
     }
 
     private Handler mHandler = new Handler() {

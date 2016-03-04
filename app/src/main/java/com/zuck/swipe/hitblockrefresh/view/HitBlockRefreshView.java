@@ -266,10 +266,8 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
      *
      * @param listener
      *            监听器的实现。
-     * @param id
-     *            为了防止不同界面的下拉刷新在上次更新时间上互相有冲突， 请不同界面在注册下拉刷新监听器时一定要传入不同的id。
      */
-    public void setOnRefreshListener(PullToRefreshListener listener, int id) {
+    public void setOnRefreshListener(PullToRefreshListener listener) {
         mListener = listener;
     }
 
