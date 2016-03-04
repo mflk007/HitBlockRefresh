@@ -1,5 +1,7 @@
 package com.zuck.swipe.hitblockrefresh.view;
 
+
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,17 +13,25 @@ import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Switch;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Created by Hitomis on 2016/2/29.
+ */
 public class HitBlockView extends View {
 
     public static final int STATUS_GAME_PREPAR = 0;
 
-    public static final int STATUS_GAME_PLAYING = 1;
+    public static final int STATUS_GAME_PLAY = 1;
 
-    public static final int STATUS_GAME_OVER = 2;
+    public static final int STATUS_LOADING = 2;
+
+    public static final int STATUS_LOADING_FINISHED = 3;
+
+    public static final int STATUS_GAME_OVER = 4;
 
     /**
      * 矩形块竖向排列的数目
@@ -41,7 +51,7 @@ public class HitBlockView extends View {
     /**
      * 分割线默认宽度大小
      */
-    private static final float DIVIDING_LINE_SIZE = 1.f;
+    static final float DIVIDING_LINE_SIZE = 1.f;
 
     /**
      * 小球移动速度
@@ -62,6 +72,12 @@ public class HitBlockView extends View {
      * 小球半径
      */
     private static final float BALL_RADIUS = 8.f;
+
+    private static final String TEXT_GAME_OVER = "Game Over";
+
+    private static final String TEXT_LOADING = "Loading...";
+
+    private static final String TEXT_LOADING_FINISHED = "Loading Finished";
     
     private Paint mPaint, blockPaint;
 
@@ -71,17 +87,17 @@ public class HitBlockView extends View {
 
     private float racketLeft, racketTop, racketHeight;
 
-    private float cx, cy, preY;
+    private float cx, cy;
 
-    private int angle = DEFAULT_ANGLE;
+    private int angle;
 
     private int screenWidth;
 
-    private List<Point> pointList = new ArrayList<>();
+    private List<Point> pointList;
 
-    private boolean isleft = true;
+    private boolean isleft;
 
-    private int gameStatus = STATUS_GAME_PREPAR;
+    private int status = STATUS_GAME_PREPAR;
 
     public HitBlockView(Context context) {
         this(context, null);
@@ -97,20 +113,6 @@ public class HitBlockView extends View {
         initTools();
     }
 
-
-    /**
-     * 获取屏幕宽度
-     *
-     * @param context context
-     * @return 手机屏幕宽度
-     */
-    public int getScreenWidth(Context context) {
-        WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        manager.getDefaultDisplay().getMetrics(dm);
-        return dm.widthPixels;
-    }
-
     private void initTools() {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setStrokeWidth(DIVIDING_LINE_SIZE);
@@ -119,9 +121,24 @@ public class HitBlockView extends View {
         blockPaint.setStyle(Paint.Style.FILL);
 
         textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        textPaint.setStyle(Paint.Style.STROKE);
-        textPaint.setStrokeCap(Paint.Cap.ROUND);
+        textPaint.setColor(Color.parseColor("#6C6C6C"));
+        textPaint.setTextSize(65);
+    }
 
+    private void initConfigParams() {
+        cx = racketLeft - 2 * BALL_RADIUS;
+        cy = (int) (getHeight() * .5f);
+
+        racketTop = 0;
+        angle = DEFAULT_ANGLE;
+
+        isleft = true;
+
+        if (pointList == null) {
+            pointList = new ArrayList<>();
+        } else {
+            pointList.clear();
+        }
     }
 
     @Override
@@ -140,8 +157,9 @@ public class HitBlockView extends View {
 
         racketHeight = (int) (BLOCK_HEIGHT * 1.6f);
 
-        cx = racketLeft - 2 * BALL_RADIUS;
-        cy = (int) (getHeight() * .5f);
+        if (status == STATUS_GAME_PREPAR) {
+            initConfigParams();
+        }
     }
 
     @Override
@@ -154,36 +172,29 @@ public class HitBlockView extends View {
 
         drawRacket(canvas);
 
+        if (status >=STATUS_GAME_PLAY && status<= STATUS_LOADING_FINISHED)
         makeBallPath(canvas);
 
-//        if (gameStatus == STATUS_GAME_PREPAR) {
-//            drawCurtain(canvas);
-//        }
-
+        drawText(canvas);
     }
 
-//    private void drawCurtain(Canvas canvas) {
-//        drawTopCurtain(canvas);
-//        drawBottomCurtain(canvas);
-//    }
-//
-//    private void drawTopCurtain(Canvas canvas) {
-//        canvas.saveLayer(0, DIVIDING_LINE_SIZE, getWidth(), getHeight() * .5f, null, Canvas.ALL_SAVE_FLAG);
-//        canvas.drawColor(Color.WHITE);
-//
-//        textPaint.setTextSize(35);
-//        canvas.drawText("Pull to Break Out", 50, 50, textPaint);
-//        canvas.restore();
-//    }
-//
-//    private void drawBottomCurtain(Canvas canvas) {
-//        canvas.saveLayer(0, getHeight() * .5f, getWidth(), getHeight() - DIVIDING_LINE_SIZE, null, Canvas.ALL_SAVE_FLAG);
-//        canvas.drawColor(Color.YELLOW);
-//
-//        textPaint.setTextSize(35);
-//        canvas.drawText("Pull to Break Out", 300, 180, textPaint);
-//        canvas.restore();
-//    }
+    private void drawText(Canvas canvas) {
+        switch (status) {
+            case STATUS_GAME_PREPAR:
+            case STATUS_GAME_PLAY:
+            case STATUS_LOADING:
+                promptText(canvas, TEXT_LOADING);
+                break;
+            case STATUS_LOADING_FINISHED:
+                promptText(canvas, TEXT_LOADING_FINISHED);
+                break;
+            case STATUS_GAME_OVER:
+                promptText(canvas, TEXT_GAME_OVER);
+                break;
+        }
+    }
+
+
 
     /**
      * 绘制分割线
@@ -223,8 +234,8 @@ public class HitBlockView extends View {
             if (checkTouchRacket(cy)) {
                 isleft = true;
             }
-        } else if (cx - BALL_RADIUS > racketLeft + BLOCK_HEIGHT) { // 小球超出挡板区域
-            promptGameOver(canvas);
+        } else if (cx > canvas.getWidth()) { // 小球超出挡板区域
+            status = STATUS_GAME_OVER;
         }
 
         if (cy <= BALL_RADIUS + DIVIDING_LINE_SIZE) { // 小球撞到上边界
@@ -243,12 +254,14 @@ public class HitBlockView extends View {
 
         canvas.drawCircle(cx, cy, BALL_RADIUS, mPaint);
 
-        postInvalidate();
+        invalidate();
 
     }
 
-    private void promptGameOver(Canvas canvas) {
-
+    private void promptText(Canvas canvas, String text) {
+        float textX = (canvas.getWidth() - textPaint.measureText(TEXT_GAME_OVER)) * .5f;
+        float textY = canvas.getHeight()  * .5f - (textPaint.ascent() + textPaint.descent()) * .5f;
+        canvas.drawText(text, textX, textY, textPaint);
     }
 
     /**
@@ -335,26 +348,27 @@ public class HitBlockView extends View {
             distance = maxDistance;
         }
 
-        racketTop += distance;
+        racketTop = distance;
         postInvalidate();
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        int action = event.getAction();
-        switch (action) {
-            case MotionEvent.ACTION_DOWN:
-                preY = event.getY();
-                break;
-            case MotionEvent.ACTION_MOVE:
-                float currY = event.getY();
-                float diffY = currY - preY;
-                preY = currY;
-                moveRacket(diffY);
-                break;
-            case MotionEvent.ACTION_UP:
-                break;
-        }
-        return true;
+    public void postStatus(int status) {
+        this.status = status;
+        postInvalidate();
+        requestLayout();
     }
+
+    /**
+     * 获取屏幕宽度
+     *
+     * @param context context
+     * @return 手机屏幕宽度
+     */
+    public int getScreenWidth(Context context) {
+        WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        manager.getDefaultDisplay().getMetrics(dm);
+        return dm.widthPixels;
+    }
+
 }

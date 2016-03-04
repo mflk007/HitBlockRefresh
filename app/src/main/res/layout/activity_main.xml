@@ -4,10 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.zuck.swipe.hitblockrefresh.MainActivity">
 
-    <com.zuck.swipe.hitblockrefresh.view.HitBlockView
+    <com.zuck.swipe.hitblockrefresh.view.HitBlockRefreshView
+        android:id="@+id/refresh_hit_block"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content">
+
+        <ListView
+            android:id="@+id/list_view"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:scrollbars="none" >
+        </ListView>
+    </com.zuck.swipe.hitblockrefresh.view.HitBlockRefreshView>
+
 </RelativeLayout>

@@ -1,30 +1,38 @@
 package com.zuck.swipe.hitblockrefresh.view;
 
+
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 /**
  * Created by Hitomis on 2016/3/1.
  */
-public class HitBlockHeader extends LinearLayout {
+@SuppressLint("NewApi")
+public class HitBlockHeader extends FrameLayout {
+
+    private Context mContext;
 
     private HitBlockView hitBlockView;
 
     private RelativeLayout curtainReLayout, maskReLayout;
-
-    private FrameLayout containerLayout;
 
     private TextView topMaskView, bottomMaskView;
 
@@ -43,56 +51,51 @@ public class HitBlockHeader extends LinearLayout {
 
     public HitBlockHeader(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initView(context);
+        mContext = context;
+        initView();
     }
 
-    private void initView(Context mContext) {
-
-        containerLayout = new FrameLayout(mContext);
-        LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        addView(containerLayout, lp);
+    private void initView() {
 
         hitBlockView = new HitBlockView(mContext);
         hitBlockView.postStatus(HitBlockView.STATUS_GAME_PREPAR);
-        containerLayout.addView(hitBlockView);
-
-        LayoutParams maskLp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        maskLp.topMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
-        maskLp.bottomMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
+        addView(hitBlockView);
 
         curtainReLayout = new RelativeLayout(mContext);
         maskReLayout = new RelativeLayout(mContext);
-        maskReLayout.setBackgroundColor(Color.parseColor("#5A5A5A"));
+        maskReLayout.setBackgroundColor(Color.parseColor("#2A2A2A"));
 
-        topMaskView = new TextView(mContext);
-        topMaskView.setTextColor(Color.BLACK);
-        topMaskView.setBackgroundColor(Color.WHITE);
-        topMaskView.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-        topMaskView.setTextSize(20);
-        topMaskView.setText("Pull to Break Out!");
+        topMaskView = createMaskTextView("Pull to Break Out!", 20, Gravity.BOTTOM);
+        bottomMaskView = createMaskTextView("Scrooll to move handle", 18, Gravity.TOP);
 
-        bottomMaskView = new TextView(mContext);
-        bottomMaskView.setTextColor(Color.BLACK);
-        bottomMaskView.setBackgroundColor(Color.WHITE);
-        bottomMaskView.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        bottomMaskView.setTextSize(18);
-        bottomMaskView.setText("Scrooll to move handle");
-
-        containerLayout.addView(maskReLayout, maskLp);
-        containerLayout.addView(curtainReLayout, maskLp);
+        coverMaskView();
 
         hitBlockView.getViewTreeObserver().addOnGlobalLayoutListener(new MeasureListener());
 
     }
 
-    @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        super.onLayout(changed, l, t, r, b);
+    private TextView createMaskTextView(String text, int textSize, int gravity) {
+        TextView maskTextView = new TextView(mContext);
+        maskTextView.setTextColor(Color.BLACK);
+        maskTextView.setBackgroundColor(Color.WHITE);
+        maskTextView.setGravity(gravity | Gravity.CENTER_HORIZONTAL);
+        maskTextView.setTextSize(textSize);
+        maskTextView.setText(text);
+        return maskTextView;
+    }
 
-        ViewGroup.LayoutParams layoutParams = getLayoutParams();
-        layoutParams.height = 0;
-        setLayoutParams(layoutParams);
-        setGravity(Gravity.BOTTOM);
+    private void coverMaskView() {
+        LayoutParams maskLp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        maskLp.topMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
+        maskLp.bottomMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
+
+        addView(maskReLayout, maskLp);
+        addView(curtainReLayout, maskLp);
+    }
+
+    public void moveRacket(float distance) {
+        if (isStart)
+        hitBlockView.moveRacket(distance);
     }
 
     private class MeasureListener implements ViewTreeObserver.OnGlobalLayoutListener {
@@ -102,11 +105,9 @@ public class HitBlockHeader extends LinearLayout {
             halfHitBlockHeight = (int) ((hitBlockView.getHeight() - 2 * HitBlockView.DIVIDING_LINE_SIZE) * .5f);
             RelativeLayout.LayoutParams topRelayLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, halfHitBlockHeight);
             RelativeLayout.LayoutParams bottomRelayLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, halfHitBlockHeight);
-            topRelayLayoutParams.topMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
-            bottomRelayLayoutParams.topMargin = halfHitBlockHeight + topRelayLayoutParams.topMargin;
+            bottomRelayLayoutParams.topMargin = halfHitBlockHeight;
 
             curtainReLayout.removeAllViews();
-
             curtainReLayout.addView(topMaskView, 0, topRelayLayoutParams);
             curtainReLayout.addView(bottomMaskView, 1, bottomRelayLayoutParams);
 
@@ -115,7 +116,7 @@ public class HitBlockHeader extends LinearLayout {
     }
 
 
-    public void updateStatus() {
+    private void doStart(long delay) {
         ObjectAnimator topMaskAnimator = ObjectAnimator.ofFloat(topMaskView, "translationY", topMaskView.getTranslationY(), -halfHitBlockHeight);
         ObjectAnimator bottomMaskAnimator = ObjectAnimator.ofFloat(bottomMaskView, "translationY", bottomMaskView.getTranslationY(), halfHitBlockHeight);
         ObjectAnimator maskShadowAnimator = ObjectAnimator.ofFloat(maskReLayout, "alpha", maskReLayout.getAlpha(), 0);
@@ -123,53 +124,61 @@ public class HitBlockHeader extends LinearLayout {
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet.play(topMaskAnimator).with(bottomMaskAnimator).with(maskShadowAnimator);
         animatorSet.setDuration(800);
+        animatorSet.setStartDelay(delay);
+        animatorSet.start();
 
         animatorSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                containerLayout.removeView(maskReLayout);
-                containerLayout.removeView(curtainReLayout);
+                topMaskView.setVisibility(View.GONE);
+                bottomMaskView.setVisibility(View.GONE);
+                maskReLayout.setVisibility(View.GONE);
+
                 hitBlockView.postStatus(HitBlockView.STATUS_GAME_PLAY);
             }
         });
-        animatorSet.start();
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//        final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-//        int width = 0, height = 0;
-//
-//        int count = getChildCount();
-//        for (int i = 0; i < count; i++) {
-//            View childView = getChildAt(i);
-//            measureChild(childView, widthMeasureSpec, heightMeasureSpec);
-//            if (childView instanceof HitBlockView) {
-//                width = childView.getMeasuredWidth();
-//                height = childView.getMeasuredHeight();
-//            }
-//        }
-//
-//        if (heightMode == MeasureSpec.UNSPECIFIED || heightMode == MeasureSpec.EXACTLY) {
-//            widthMeasureSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
-//            heightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
-//        }
+        final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        int width = 0, height = 0;
 
+        int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View childView = getChildAt(i);
+            measureChild(childView, widthMeasureSpec, heightMeasureSpec);
+            if (childView instanceof HitBlockView) {
+                width = childView.getMeasuredWidth();
+                height = childView.getMeasuredHeight();
+            }
+        }
+
+        if (heightMode == MeasureSpec.UNSPECIFIED || heightMode == MeasureSpec.EXACTLY) {
+            widthMeasureSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
+            heightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
+        }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
-    public void updateVisiableHeight(int height) {
-        ViewGroup.LayoutParams mLayoutLayoutParams = (ViewGroup.LayoutParams) getLayoutParams();
-        mLayoutLayoutParams.height = height;
-        setLayoutParams(mLayoutLayoutParams);
-
-        if (height >= hitBlockView.getHeight() && !isStart) {
+    public void postStart() {
+        if (!isStart) {
+            doStart(200);
             isStart = true;
-            updateStatus();
         }
     }
 
-    public int getVisiableHeight() {
-        return getHeight();
+    public void postEnd() {
+        isStart = false;
+        hitBlockView.postStatus(HitBlockView.STATUS_GAME_PREPAR);
+
+        topMaskView.setTranslationY(topMaskView.getTranslationY() + halfHitBlockHeight);
+        bottomMaskView.setTranslationY(bottomMaskView.getTranslationY() - halfHitBlockHeight);
+        maskReLayout.setAlpha(1.f);
+
+        topMaskView.setVisibility(View.VISIBLE);
+        bottomMaskView.setVisibility(View.VISIBLE);
+        maskReLayout.setVisibility(View.VISIBLE);
     }
+
 }
