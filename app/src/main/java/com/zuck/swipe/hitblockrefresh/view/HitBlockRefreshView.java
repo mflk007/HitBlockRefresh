@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -48,6 +47,11 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
     public static final int STATUS_REFRESH_FINISHED = 4;
 
     /**
+     * 下拉拖动的黏性比率
+     */
+    private static final float STICK_RATIO = .65f;
+
+    /**
      * 下拉刷新的回调接口
      */
     private PullToRefreshListener mListener;
@@ -63,80 +67,78 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
     private ListView listView;
 
     /**
-     * 下拉头的布局参数
+     * 下拉控件布局参数
      */
     private MarginLayoutParams headerLayoutParams;
 
     /**
-     * 下拉头的高度
+     * 下拉控件高度
      */
     private int hideHeaderHeight;
 
     /**
-     * 当前处理什么状态
+     * 当前状态
      */
     private int currentStatus = STATUS_REFRESH_FINISHED;;
 
     /**
-     * 手指按下时的屏幕纵坐标
+     * 手指按下时屏幕纵坐标
      */
     private float preDownY;
 
     /**
-     * 在被判定为滚动之前用户手指可以移动的最大值。
+     * 在被判定为滚动之前用户手指可以移动的最大值
      */
     private int touchSlop;
 
     /**
-     * 是否已加载过一次layout，这里onLayout中的初始化只需加载一次
+     * 用于控制onLayout中的初始化只需加载一次
      */
-    private boolean loadOnce;
+    private boolean once;
 
     /**
      * 当前是否可以下拉，只有ListView滚动到头的时候才允许下拉
      */
     private boolean ableToPull;
 
-    private static final float STICK_RATIO = .65f;
-
     private int tempHeaderTopMargin;
 
-    /**
-     * 下拉刷新控件的构造函数，会在运行时动态添加一个下拉头的布局。
-     *
-     * @param context
-     * @param attrs
-     */
+    public HitBlockRefreshView(Context context) {
+        this(context, null);
+    }
+
     public HitBlockRefreshView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        header = new HitBlockHeader(context);
-        touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+        this(context, attrs, 0);
+    }
+
+    public HitBlockRefreshView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
         setOrientation(VERTICAL);
+        touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+        initView(context, attrs);
+    }
+
+    private void initView(Context context, AttributeSet attrs) {
+        header = new HitBlockHeader(context, attrs);
         addView(header, 0);
     }
 
-    /**
-     * 进行一些关键性的初始化操作，比如：将下拉头向上偏移进行隐藏，给ListView注册touch事件。
-     */
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
-        if (changed && !loadOnce) {
+        if (changed && !once) {
             hideHeaderHeight = -header.getHeight();
             headerLayoutParams = (MarginLayoutParams) header.getLayoutParams();
             headerLayoutParams.topMargin = hideHeaderHeight;
             listView = (ListView) getChildAt(1);
             listView.setOnTouchListener(this);
-            loadOnce = true;
+            once = true;
         }
     }
 
-    /**
-     * 当ListView被触摸时调用，其中处理了各种下拉刷新的具体逻辑。
-     */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        setIsAbleToPull(event);
+        checkAblePull(event);
         if (!ableToPull) return false;
         if (currentStatus == STATUS_AGAIN_DOWN) {
             return handleAgainDownAction(event);
@@ -146,8 +148,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
                 preDownY = event.getRawY();
                 if (currentStatus == STATUS_REFRESHING) { //表示释放后处于刷新状态时候，又按住了
                     currentStatus = STATUS_AGAIN_DOWN;
-                    headerLayoutParams.topMargin = 0;
-                    header.setLayoutParams(headerLayoutParams);
+                    setHeaderTopMarign(0);
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -172,8 +173,8 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
                 }
 
                 // 通过偏移下拉头的topMargin值，来实现下拉效果
-                headerLayoutParams.topMargin = (int) (offsetY + hideHeaderHeight);
-                header.setLayoutParams(headerLayoutParams);
+                setHeaderTopMarign((int) (offsetY + hideHeaderHeight));
+
                 break;
             case MotionEvent.ACTION_UP:
                 if (currentStatus == STATUS_PULL_TO_REFRESH) {
@@ -185,14 +186,29 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
                 break;
         }
         if (currentStatus == STATUS_PULL_TO_REFRESH || currentStatus == STATUS_RELEASE_TO_REFRESH) {
-            // 当前正处于下拉或释放状态，要让ListView失去焦点，否则被点击的那一项会一直处于选中状态
-            listView.setPressed(false);
-            listView.setFocusable(false);
-            listView.setFocusableInTouchMode(false);
-            // 当前正处于下拉或释放状态，通过返回true屏蔽掉ListView的滚动事件
+            //让ListView失去焦点, 不可被点击
+            disableListView();
             return true;
         }
         return false;
+    }
+
+    /**
+     * 给header设置topMargin参数
+     * @param margin
+     */
+    private void setHeaderTopMarign(int margin) {
+        headerLayoutParams.topMargin = margin;
+        header.setLayoutParams(headerLayoutParams);
+    }
+
+    /**
+     * 禁用ListView，让其失去焦点不可接受点击
+     */
+    private void disableListView() {
+        listView.setPressed(false);
+        listView.setFocusable(false);
+        listView.setFocusableInTouchMode(false);
     }
 
     /**
@@ -201,23 +217,19 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
      * @return
      */
     private boolean handleAgainDownAction(MotionEvent event) {
-        Log.d(tag, "&&&&&&&&&&&&&&&&& : " + event.getAction());
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
                 float currY = event.getRawY();
                 float distance = currY - preDownY;
                 float offsetY = distance * STICK_RATIO;
                 header.moveRacket(offsetY);
-                headerLayoutParams.topMargin = (int) (offsetY);
-                header.setLayoutParams(headerLayoutParams);
+                setHeaderTopMarign((int) (offsetY));
                 break;
             case MotionEvent.ACTION_UP:
                 rollbackHeader();
                 break;
         }
-        listView.setPressed(false);
-        listView.setFocusable(false);
-        listView.setFocusableInTouchMode(false);
+        disableListView();
         return true;
     }
 
@@ -227,7 +239,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
      *
      * @param event
      */
-    private void setIsAbleToPull(MotionEvent event) {
+    private void checkAblePull(MotionEvent event) {
         View firstChild = listView.getChildAt(0);
         if (firstChild != null) {
             int firstVisiblePos = listView.getFirstVisiblePosition();
@@ -239,8 +251,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
                 ableToPull = true;
             } else { // 反之
                 if (headerLayoutParams.topMargin != hideHeaderHeight) {
-                    headerLayoutParams.topMargin = hideHeaderHeight;
-                    header.setLayoutParams(headerLayoutParams);
+                    setHeaderTopMarign(hideHeaderHeight);
                 }
                 ableToPull = false;
             }
@@ -266,6 +277,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
      * 当所有的刷新逻辑完成后，记录调用一下，否则你的ListView将一直处于正在刷新状态。
      */
     public void finishRefreshing() {
+        header.postComplete();
         if (currentStatus != STATUS_AGAIN_DOWN) {
             rollbackHeader();
         }
@@ -283,8 +295,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 int marginValue = Integer.parseInt(animation.getAnimatedValue().toString());
-                headerLayoutParams.topMargin = marginValue;
-                header.setLayoutParams(headerLayoutParams);
+                setHeaderTopMarign(marginValue);
             }
         });
         rbToHeaderAnimator.addListener(new AnimatorListenerAdapter() {
@@ -317,8 +328,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 int marginValue = Integer.parseInt(animation.getAnimatedValue().toString());
-                headerLayoutParams.topMargin = -marginValue + tempHeaderTopMargin;
-                header.setLayoutParams(headerLayoutParams);
+                setHeaderTopMarign(-marginValue + tempHeaderTopMargin);
             }
         });
         rbAnimator.addListener(new AnimatorListenerAdapter() {
@@ -339,12 +349,10 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
      * 下拉刷新的监听器，使用下拉刷新的地方应该注册此监听器来获取刷新回调。
      */
     public interface PullToRefreshListener {
-
         /**
-         * 刷新时会去回调此方法，在方法内编写具体的刷新逻辑。注意此方法是在子线程中调用的， 你可以不必另开线程来进行耗时操作。
+         * 刷新时回调方法
          */
         void onRefresh();
-
     }
 
 }

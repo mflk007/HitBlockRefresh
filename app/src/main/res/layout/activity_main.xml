@@ -2,6 +2,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.zuck.swipe.hitblockrefresh.MainActivity">
@@ -9,7 +10,9 @@
     <com.zuck.swipe.hitblockrefresh.view.HitBlockRefreshView
         android:id="@+id/refresh_hit_block"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        app:block_horizontal_num="3"
+        app:ball_speed="medium">
 
         <ListView
             android:id="@+id/list_view"

@@ -3,6 +3,7 @@ package com.zuck.swipe.hitblockrefresh.view;
 
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -10,10 +11,10 @@ import android.graphics.Point;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Switch;
+
+import com.zuck.swipe.hitblockrefresh.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,21 +28,29 @@ public class HitBlockView extends View {
 
     public static final int STATUS_GAME_PLAY = 1;
 
-    public static final int STATUS_LOADING = 2;
+    public static final int STATUS_GAME_FINISHED = 2;
 
-    public static final int STATUS_LOADING_FINISHED = 3;
-
-    public static final int STATUS_GAME_OVER = 4;
+    public static final int STATUS_GAME_OVER = 3;
 
     /**
-     * 矩形块竖向排列的数目
+     * 默认矩形块竖向排列的数目
      */
     private static final int BLOCK_VERTICAL_NUM = 5;
 
     /**
-     * 矩形块横向排列的数目
+     * 默认矩形块横向排列的数目
      */
     private static final int BLOCK_HORIZONTAL_NUM = 3;
+
+    /**
+     * 挡板所在位置占屏幕宽度的比率
+     */
+    private static final float RACKET_POSITION_RATIO = .8f;
+
+    /**
+     * 矩形块所在位置占屏幕宽度的比率
+     */
+    private static final float BLOCK_POSITION_RATIO = .08f;
 
     /**
      * 小球默认其实弹射角度
@@ -56,7 +65,7 @@ public class HitBlockView extends View {
     /**
      * 小球移动速度
      */
-    private static final float SPEED = 6.f;
+    private static final int SPEED = 6;
 
     /**
      * 矩形块的高度
@@ -78,7 +87,7 @@ public class HitBlockView extends View {
     private static final String TEXT_LOADING = "Loading...";
 
     private static final String TEXT_LOADING_FINISHED = "Loading Finished";
-    
+
     private Paint mPaint, blockPaint;
 
     private TextPaint textPaint;
@@ -89,8 +98,6 @@ public class HitBlockView extends View {
 
     private float cx, cy;
 
-    private int angle;
-
     private int screenWidth;
 
     private List<Point> pointList;
@@ -98,6 +105,14 @@ public class HitBlockView extends View {
     private boolean isleft;
 
     private int status = STATUS_GAME_PREPAR;
+
+    private int angle;
+
+    private int blockHorizontalNum;
+
+    private int speed;
+
+    private int blockColor, ballColor, racketColor;
 
     public HitBlockView(Context context) {
         this(context, null);
@@ -110,7 +125,22 @@ public class HitBlockView extends View {
     public HitBlockView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         screenWidth = getScreenWidth(context);
+
+        initAttrs(context, attrs);
         initTools();
+    }
+
+    private void initAttrs(Context context, AttributeSet attrs) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.HitBlock);
+
+        blockHorizontalNum = typedArray.getInt(R.styleable.HitBlock_block_horizontal_num, BLOCK_HORIZONTAL_NUM);
+        speed = typedArray.getInt(R.styleable.HitBlock_ball_speed, SPEED);
+
+        blockColor = typedArray.getColor(R.styleable.HitBlock_block_color, Color.rgb(255, 255, 255));
+        ballColor = typedArray.getColor(R.styleable.HitBlock_ball_color, Color.BLACK);
+        racketColor = typedArray.getColor(R.styleable.HitBlock_racket_color, Color.parseColor("#A5A5A5"));
+
+        typedArray.recycle();
     }
 
     private void initTools() {
@@ -121,8 +151,7 @@ public class HitBlockView extends View {
         blockPaint.setStyle(Paint.Style.FILL);
 
         textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        textPaint.setColor(Color.parseColor("#6C6C6C"));
-        textPaint.setTextSize(65);
+        textPaint.setColor(Color.parseColor("#C1C2C2"));
     }
 
     private void initConfigParams() {
@@ -130,6 +159,7 @@ public class HitBlockView extends View {
         cy = (int) (getHeight() * .5f);
 
         racketTop = 0;
+
         angle = DEFAULT_ANGLE;
 
         isleft = true;
@@ -151,9 +181,9 @@ public class HitBlockView extends View {
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
 
-        blockLeft = BLOCK_HORIZONTAL_NUM * BLOCK_WIDTH + (BLOCK_HORIZONTAL_NUM - 1) * DIVIDING_LINE_SIZE;
+        blockLeft = screenWidth * BLOCK_POSITION_RATIO;
 
-        racketLeft = blockLeft * 14;
+        racketLeft = screenWidth * RACKET_POSITION_RATIO;
 
         racketHeight = (int) (BLOCK_HEIGHT * 1.6f);
 
@@ -172,7 +202,7 @@ public class HitBlockView extends View {
 
         drawRacket(canvas);
 
-        if (status >=STATUS_GAME_PLAY && status<= STATUS_LOADING_FINISHED)
+        if (status >=STATUS_GAME_PLAY && status<= STATUS_GAME_FINISHED)
         makeBallPath(canvas);
 
         drawText(canvas);
@@ -182,13 +212,15 @@ public class HitBlockView extends View {
         switch (status) {
             case STATUS_GAME_PREPAR:
             case STATUS_GAME_PLAY:
-            case STATUS_LOADING:
+                textPaint.setTextSize(60);
                 promptText(canvas, TEXT_LOADING);
                 break;
-            case STATUS_LOADING_FINISHED:
+            case STATUS_GAME_FINISHED:
+                textPaint.setTextSize(50);
                 promptText(canvas, TEXT_LOADING_FINISHED);
                 break;
             case STATUS_GAME_OVER:
+                textPaint.setTextSize(60);
                 promptText(canvas, TEXT_GAME_OVER);
                 break;
         }
@@ -211,7 +243,7 @@ public class HitBlockView extends View {
      * @param canvas 默认画布
      */
     private void drawRacket(Canvas canvas) {
-        mPaint.setColor(Color.parseColor("#A5A5A5"));
+        mPaint.setColor(racketColor);
         canvas.drawRect(racketLeft, racketTop, racketLeft + BLOCK_WIDTH, racketTop + racketHeight, mPaint);
     }
 
@@ -220,18 +252,23 @@ public class HitBlockView extends View {
      * @param canvas 默认画布
      */
     private void makeBallPath(Canvas canvas) {
-        mPaint.setColor(Color.BLACK);
+        mPaint.setColor(ballColor);
 
-        if (cx <= blockLeft * 2 + BALL_RADIUS) { // 小球进入到色块区域
+        if (cx <= blockLeft +  blockHorizontalNum * BLOCK_WIDTH + (blockHorizontalNum - 1) * DIVIDING_LINE_SIZE + BALL_RADIUS) { // 小球进入到色块区域
             if (checkTouchBlock(cx, cy)) { // 反弹回来
                 isleft = false;
             }
-        }  else if (cx  <= blockLeft + BALL_RADIUS ) { // 小球穿过色块区域
-
+        }
+        if (cx <= blockLeft + BALL_RADIUS ) { // 小球穿过色块区域
+            isleft = false;
         }
 
-        if (cx + BALL_RADIUS >= racketLeft && cx - BALL_RADIUS < racketLeft + BLOCK_WIDTH) { //小球在挡板区域范围内
-            if (checkTouchRacket(cy)) {
+        if (cx + BALL_RADIUS >= racketLeft && cx - BALL_RADIUS < racketLeft + BLOCK_WIDTH) { //小球当前坐标X值在挡板X值区域范围内
+            if (checkTouchRacket(cy)) { // 小球与挡板接触
+                if (pointList.size() == blockHorizontalNum * BLOCK_VERTICAL_NUM) { // 矩形块全部被消灭，游戏结束
+                    status = STATUS_GAME_OVER;
+                    return;
+                }
                 isleft = true;
             }
         } else if (cx > canvas.getWidth()) { // 小球超出挡板区域
@@ -246,11 +283,11 @@ public class HitBlockView extends View {
 
 
         if (isleft) {
-            cx -= SPEED;
+            cx -= speed;
         } else {
-            cx += SPEED;
+            cx += speed;
         }
-        cy -= (float) Math.tan(Math.toRadians(angle)) * SPEED;
+        cy -= (float) Math.tan(Math.toRadians(angle)) * speed;
 
         canvas.drawCircle(cx, cy, BALL_RADIUS, mPaint);
 
@@ -259,7 +296,7 @@ public class HitBlockView extends View {
     }
 
     private void promptText(Canvas canvas, String text) {
-        float textX = (canvas.getWidth() - textPaint.measureText(TEXT_GAME_OVER)) * .5f;
+        float textX = (canvas.getWidth() - textPaint.measureText(text)) * .5f;
         float textY = canvas.getHeight()  * .5f - (textPaint.ascent() + textPaint.descent()) * .5f;
         canvas.drawText(text, textX, textY, textPaint);
     }
@@ -285,8 +322,8 @@ public class HitBlockView extends View {
      * @return 撞击到：true，反之：false
      */
     private boolean checkTouchBlock(float x, float y) {
-        int columnX = (int) ((x - blockLeft - BALL_RADIUS - SPEED ) / BLOCK_WIDTH);
-        columnX = columnX == BLOCK_HORIZONTAL_NUM ? columnX - 1 : columnX;
+        int columnX = (int) ((x - blockLeft - BALL_RADIUS - speed ) / BLOCK_WIDTH);
+        columnX = columnX == blockHorizontalNum ? columnX - 1 : columnX;
         int rowY = (int) (y / BLOCK_HEIGHT);
         rowY = rowY == BLOCK_VERTICAL_NUM ? rowY - 1 : rowY;
         Point p = new Point();
@@ -312,10 +349,10 @@ public class HitBlockView extends View {
      */
     private void drawColorBlock(Canvas canvas) {
         float left, top;
-        int column, row, colorCode;
-        for (int i = 0; i < BLOCK_HORIZONTAL_NUM * BLOCK_VERTICAL_NUM; i++) {
-            column = i % BLOCK_HORIZONTAL_NUM;
-            row = i % BLOCK_VERTICAL_NUM;
+        int column, row, redCode, greenCode, blueCode;
+        for (int i = 0; i < blockHorizontalNum * BLOCK_VERTICAL_NUM; i++) {
+            row = i / blockHorizontalNum;
+            column = i % blockHorizontalNum;
 
             boolean flag = false;
             for (Point point : pointList) {
@@ -328,14 +365,17 @@ public class HitBlockView extends View {
                 continue;
             }
 
-            colorCode = (255 / BLOCK_HORIZONTAL_NUM) * column;
-            blockPaint.setColor(Color.rgb(colorCode, colorCode, colorCode));
+            redCode = (Color.red(blockColor) / blockHorizontalNum) * column;
+            greenCode = (Color.green(blockColor) / blockHorizontalNum) * column;
+            blueCode = (Color.blue(blockColor) / blockHorizontalNum) * column;
+            blockPaint.setColor(Color.rgb(redCode, greenCode, blueCode));
 
             left = blockLeft + column * (BLOCK_WIDTH + DIVIDING_LINE_SIZE);
             top = DIVIDING_LINE_SIZE + row * (BLOCK_HEIGHT + DIVIDING_LINE_SIZE);
             canvas.drawRect(left, top, left + BLOCK_WIDTH, top + BLOCK_HEIGHT, blockPaint);
         }
     }
+
 
     /**
      * 控制挡板上下移动
