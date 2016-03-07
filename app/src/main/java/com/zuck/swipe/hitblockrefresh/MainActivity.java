@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import com.zuck.swipe.hitblockrefresh.view.HitBlockRefreshView;
 
@@ -16,7 +16,12 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private HitBlockRefreshView refreshView;
+
     private ListView listView;
+
+    private List<String> dataList;
+
+    private ArrayAdapter<String> arrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,12 +32,12 @@ public class MainActivity extends AppCompatActivity {
 
         listView = (ListView) findViewById(R.id.list_view);
 
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, createDate());
+        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, createDate());
 
         listView.setAdapter(arrayAdapter);
-        refreshView.setOnRefreshListener(new HitBlockRefreshView.PullToRefreshListener() {
+        refreshView.setOnRefreshListener(new HitBlockRefreshView.HitBlockRefreshListener() {
             @Override
-            public void onRefresh() {
+            public void onRefreshing() {
                 try {
                     // 模拟网络请求耗时动作
                     Thread.sleep(2000);
@@ -47,12 +52,15 @@ public class MainActivity extends AppCompatActivity {
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
+            dataList.add("X");
+            arrayAdapter.notifyDataSetChanged();
             refreshView.finishRefreshing();
+            Toast.makeText(MainActivity.this, "Refresh complete!", Toast.LENGTH_SHORT).show();
         }
     };
 
     private List<String> createDate() {
-        List<String> dataList = new ArrayList<>();
+        dataList = new ArrayList<>();
         dataList.add("A");
         dataList.add("B");
         dataList.add("C");
@@ -60,9 +68,6 @@ public class MainActivity extends AppCompatActivity {
         dataList.add("E");
         dataList.add("F");
         dataList.add("G");
-        dataList.add("H");
-        dataList.add("L");
-        dataList.add("M");
         return dataList;
     }
 }

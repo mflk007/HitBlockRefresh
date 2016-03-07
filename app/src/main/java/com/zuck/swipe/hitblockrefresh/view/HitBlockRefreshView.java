@@ -8,7 +8,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
@@ -54,7 +54,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
     /**
      * 下拉刷新的回调接口
      */
-    private PullToRefreshListener mListener;
+    private HitBlockRefreshListener mListener;
 
     /**
      * 下拉头的View
@@ -267,7 +267,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
      * @param listener
      *            监听器的实现。
      */
-    public void setOnRefreshListener(PullToRefreshListener listener) {
+    public void setOnRefreshListener(HitBlockRefreshListener listener) {
         mListener = listener;
     }
 
@@ -288,7 +288,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
         ValueAnimator rbToHeaderAnimator = ValueAnimator.ofInt(headerLayoutParams.topMargin, 0);
         long duration = (long) (headerLayoutParams.topMargin * 1.1f) >=0 ? (long) (headerLayoutParams.topMargin * 1.1f) : 0;
         rbToHeaderAnimator.setDuration(duration);
-        rbToHeaderAnimator.setInterpolator(new AccelerateInterpolator());
+        rbToHeaderAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
         rbToHeaderAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -305,7 +305,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
                     @Override
                     public void run() {
                         if (mListener != null) {
-                            mListener.onRefresh();
+                            mListener.onRefreshing();
                         }
                     }
                 });
@@ -321,7 +321,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
         tempHeaderTopMargin = headerLayoutParams.topMargin;
         ValueAnimator rbAnimator = ValueAnimator.ofInt(0, header.getHeight() + tempHeaderTopMargin);
         rbAnimator.setDuration(300);
-        rbAnimator.setInterpolator(new AccelerateInterpolator());
+        rbAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
         rbAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -346,11 +346,11 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
     /**
      * 下拉刷新的监听器，使用下拉刷新的地方应该注册此监听器来获取刷新回调。
      */
-    public interface PullToRefreshListener {
+    public interface HitBlockRefreshListener {
         /**
          * 刷新时回调方法
          */
-        void onRefresh();
+        void onRefreshing();
     }
 
 }
