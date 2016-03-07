@@ -28,12 +28,12 @@
 
         listView = (ListView) findViewById(R.id.list_view);
 
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, createDate());
+        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, createDate());
 
         listView.setAdapter(arrayAdapter);
-        refreshView.setOnRefreshListener(new HitBlockRefreshView.PullToRefreshListener() {
+        refreshView.setOnRefreshListener(new HitBlockRefreshView.HitBlockRefreshListener() {
             @Override
-            public void onRefresh() {
+            public void onRefreshing() {
                 try {
                     // 模拟网络请求耗时动作
                     Thread.sleep(2000);
@@ -47,17 +47,7 @@
     当刷新完毕后需要在主线程中调用：
         refreshView.finishRefreshing();
 
-# 自定义属性
-    <attr name="block_horizontal_num" format="integer" />
-    <attr name="ball_speed" format="integer">
-        <enum name="low" value="3" />
-        <enum name="medium" value="6" />
-        <enum name="fast" value="9" />
-    </attr>
-    <attr name="block_color" format="color" />
-    <attr name="ball_color" format="color" />
-    <attr name="racket_color" format="color" />
-
+# Attributes
     block_horizontal_num ：矩形块列数
     ball_speed : 小球弹射速度
     block_color : 矩形块颜色
