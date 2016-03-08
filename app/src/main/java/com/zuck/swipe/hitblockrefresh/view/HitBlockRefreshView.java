@@ -15,7 +15,7 @@ import android.widget.ListView;
 import java.util.concurrent.Executors;
 
 /**
- * Created by ZhaoFan on 2016/3/2.
+ * Created by Hitomis on 2016/3/2.
  */
 public class HitBlockRefreshView extends LinearLayout implements View.OnTouchListener {
 
