@@ -15,9 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 
@@ -35,6 +33,8 @@ public class BattleCityView extends View {
     static final float VIEW_HEIGHT_RATIO = .161f;
 
     static final float TANK_BARREL_RATIO = 1/3.f;
+
+    static final float BULLET_NUM_RATIO = .4f;
 
     static final int TANK_EXTRA_SPACING = 10;
 
@@ -56,7 +56,7 @@ public class BattleCityView extends View {
 
     private int tankSize, barrelSize, tankSpaceSize, bulletSpaceSize;
 
-    private int enemySpeed = 3, bulletSpeed = 5;
+    private int enemySpeed = 3, bulletSpeed = 8;
 
     private int offsetETankX, offsetMBulletX;
 
@@ -95,7 +95,7 @@ public class BattleCityView extends View {
         tankSize = (int) (Math.floor((heightSize - (TANK_ROW_NUM + 1) * DIVIDING_LINE_SIZE) / TANK_ROW_NUM + .5f));
         barrelSize = (int) Math.floor(tankSize * TANK_BARREL_RATIO + .5f);
         tankSpaceSize = tankSize + barrelSize + TANK_EXTRA_SPACING;
-        bulletSpaceSize = (int) (screenWidth * .5f);
+        bulletSpaceSize = (int) (screenWidth * BULLET_NUM_RATIO);
 
         bulletRadius = (barrelSize - 2 * DIVIDING_LINE_SIZE) * .5f;
 
@@ -229,6 +229,7 @@ public class BattleCityView extends View {
 
         boolean isOversetp = false;
         int option = apperanceOption();
+
         for (int i = 0; i < TANK_ROW_NUM; i++) {
             Queue<RectF> rectFQueue = eTankSparseArray.get(i);
 
@@ -245,9 +246,9 @@ public class BattleCityView extends View {
             }
             if (isOversetp) {
                 rectFQueue.poll();
+                isOversetp = false;
             }
         }
-
         invalidate();
     }
 
