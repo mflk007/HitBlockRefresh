@@ -7,6 +7,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -17,12 +18,16 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.zuck.swipe.hitblockrefresh.R;
+
 /**
  * Created by Hitomis on 2016/3/1.
  */
 public class HitBlockHeader extends FrameLayout {
 
     private Context mContext;
+
+    private int headerType;
 
     private FunGameView funGameView;
 
@@ -41,18 +46,23 @@ public class HitBlockHeader extends FrameLayout {
 
     public HitBlockHeader(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
+
     }
 
     public HitBlockHeader(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mContext = context;
+
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.fun_game);
+        headerType = typedArray.getInt(R.styleable.fun_game_game_type, FunGameFactory.HITBLOCK);
+        typedArray.recycle();
+
         initView(attrs);
     }
 
     private void initView(AttributeSet attrs) {
-
-        funGameView = new HitBlockView(mContext, attrs);
-        funGameView.postStatus(HitBlockView.STATUS_GAME_PREPAR);
+        funGameView = FunGameFactory.createFunGameView(mContext, attrs, headerType);
+        funGameView.postStatus(FunGameView.STATUS_GAME_PREPAR);
         addView(funGameView);
 
         curtainReLayout = new RelativeLayout(mContext);
@@ -65,7 +75,6 @@ public class HitBlockHeader extends FrameLayout {
         coverMaskView();
 
         funGameView.getViewTreeObserver().addOnGlobalLayoutListener(new MeasureListener());
-
     }
 
     private TextView createMaskTextView(String text, int textSize, int gravity) {
@@ -80,8 +89,8 @@ public class HitBlockHeader extends FrameLayout {
 
     private void coverMaskView() {
         LayoutParams maskLp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        maskLp.topMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
-        maskLp.bottomMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
+        maskLp.topMargin = (int) FunGameView.DIVIDING_LINE_SIZE;
+        maskLp.bottomMargin = (int) FunGameView.DIVIDING_LINE_SIZE;
 
         addView(maskReLayout, maskLp);
         addView(curtainReLayout, maskLp);
@@ -96,7 +105,7 @@ public class HitBlockHeader extends FrameLayout {
 
         @Override
         public void onGlobalLayout() {
-            halfHitBlockHeight = (int) ((funGameView.getHeight() - 2 * HitBlockView.DIVIDING_LINE_SIZE) * .5f);
+            halfHitBlockHeight = (int) ((funGameView.getHeight() - 2 * FunGameView.DIVIDING_LINE_SIZE) * .5f);
             RelativeLayout.LayoutParams topRelayLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, halfHitBlockHeight);
             RelativeLayout.LayoutParams bottomRelayLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, halfHitBlockHeight);
             bottomRelayLayoutParams.topMargin = halfHitBlockHeight;
@@ -128,7 +137,7 @@ public class HitBlockHeader extends FrameLayout {
                 bottomMaskView.setVisibility(View.GONE);
                 maskReLayout.setVisibility(View.GONE);
 
-                funGameView.postStatus(HitBlockView.STATUS_GAME_PLAY);
+                funGameView.postStatus(FunGameView.STATUS_GAME_PLAY);
             }
         });
     }
@@ -142,7 +151,7 @@ public class HitBlockHeader extends FrameLayout {
         for (int i = 0; i < count; i++) {
             View childView = getChildAt(i);
             measureChild(childView, widthMeasureSpec, heightMeasureSpec);
-            if (childView instanceof HitBlockView) {
+            if (childView instanceof FunGameView) {
                 width = childView.getMeasuredWidth();
                 height = childView.getMeasuredHeight();
             }
@@ -164,7 +173,7 @@ public class HitBlockHeader extends FrameLayout {
 
     public void postEnd() {
         isStart = false;
-        funGameView.postStatus(HitBlockView.STATUS_GAME_PREPAR);
+        funGameView.postStatus(FunGameView.STATUS_GAME_PREPAR);
 
         topMaskView.setTranslationY(topMaskView.getTranslationY() + halfHitBlockHeight);
         bottomMaskView.setTranslationY(bottomMaskView.getTranslationY() - halfHitBlockHeight);
@@ -176,7 +185,7 @@ public class HitBlockHeader extends FrameLayout {
     }
 
     public void postComplete() {
-        funGameView.postStatus(HitBlockView.STATUS_GAME_FINISHED);
+        funGameView.postStatus(FunGameView.STATUS_GAME_FINISHED);
     }
 
 }
