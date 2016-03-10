@@ -11,9 +11,10 @@ import android.view.View;
 import android.view.WindowManager;
 
 /**
- * Created by ZhaoFan on 2016/3/9.
+ * Created by Hitomis on 2016/3/9.
+ * email:196425254@qq.com
  */
-abstract class FunGameView extends View{
+abstract class FunGameView extends View {
 
     static final int STATUS_GAME_PREPAR = 0;
 
@@ -34,21 +35,22 @@ abstract class FunGameView extends View{
      */
     static final float DIVIDING_LINE_SIZE = 1.f;
 
+    /**
+     * 控件高度占屏幕高度比率
+     */
     static final float VIEW_HEIGHT_RATIO = .161f;
-
-    int screenWidth, screenHeight;
 
     protected Paint mPaint;
 
     protected TextPaint textPaint;
 
-    public FunGameView(Context context) {
-        this(context, null);
-    }
+    float controllerPosition;
 
-    public FunGameView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
+    int controllerSize;
+
+    int screenWidth, screenHeight;
+
+    int status = STATUS_GAME_PREPAR;
 
     public FunGameView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
@@ -67,6 +69,8 @@ abstract class FunGameView extends View{
     }
 
     protected void initBaseConfigParams(Context context) {
+        controllerPosition = DIVIDING_LINE_SIZE;
+
         screenWidth = getScreenMetrics(context).widthPixels;
         screenHeight = getScreenMetrics(context).heightPixels;
     }
@@ -75,13 +79,12 @@ abstract class FunGameView extends View{
 
     protected abstract void drawGame(Canvas canvas);
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        drawBoundary(canvas);
-        drawGame(canvas);
+    protected abstract void resetConfigParams();
 
-    }
-
+    /**
+     * 绘制分割线
+     * @param canvas 默认画布
+     */
     private void drawBoundary(Canvas canvas) {
         mPaint.setColor(Color.parseColor("#606060"));
         canvas.drawLine(0, 0, screenWidth, 0, mPaint);
@@ -91,6 +94,76 @@ abstract class FunGameView extends View{
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         setMeasuredDimension(screenWidth, (int) (screenHeight * VIEW_HEIGHT_RATIO));
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        drawBoundary(canvas);
+        drawText(canvas);
+        drawGame(canvas);
+    }
+
+    /**
+     * 绘制文字内容
+     * @param canvas 默认画布
+     */
+    private void drawText(Canvas canvas) {
+        switch (status) {
+            case STATUS_GAME_PREPAR:
+            case STATUS_GAME_PLAY:
+                textPaint.setTextSize(60);
+                promptText(canvas, TEXT_LOADING);
+                break;
+            case STATUS_GAME_FINISHED:
+                textPaint.setTextSize(50);
+                promptText(canvas, TEXT_LOADING_FINISHED);
+                break;
+            case STATUS_GAME_OVER:
+                textPaint.setTextSize(60);
+                promptText(canvas, TEXT_GAME_OVER);
+                break;
+        }
+    }
+
+    /**
+     * 提示文字信息
+     * @param canvas 默认画布
+     * @param text 相关文字字符串
+     */
+    private void promptText(Canvas canvas, String text) {
+        float textX = (canvas.getWidth() - textPaint.measureText(text)) * .5f;
+        float textY = canvas.getHeight()  * .5f - (textPaint.ascent() + textPaint.descent()) * .5f;
+        canvas.drawText(text, textX, textY, textPaint);
+    }
+
+
+    /**
+     * 移动控制器（控制器对象为具体控件中的右边图像模型）
+     * @param distance 移动的距离
+     */
+    public void moveController(float distance) {
+        float maxDistance = (getMeasuredHeight() -  2 * DIVIDING_LINE_SIZE - controllerSize);
+
+        if (distance > maxDistance) {
+            distance = maxDistance;
+        }
+
+        controllerPosition = distance;
+        postInvalidate();
+    }
+
+    /**
+     * 更新当前控件状态
+     * @param status 状态码
+     */
+    public void postStatus(int status) {
+        this.status = status;
+
+        if (status == STATUS_GAME_PREPAR) {
+            resetConfigParams();
+        }
+
+        postInvalidate();
     }
 
     /**

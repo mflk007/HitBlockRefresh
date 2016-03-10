@@ -24,7 +24,7 @@ public class HitBlockHeader extends FrameLayout {
 
     private Context mContext;
 
-    private HitBlockView hitBlockView;
+    private FunGameView funGameView;
 
     private RelativeLayout curtainReLayout, maskReLayout;
 
@@ -51,9 +51,9 @@ public class HitBlockHeader extends FrameLayout {
 
     private void initView(AttributeSet attrs) {
 
-        hitBlockView = new HitBlockView(mContext, attrs);
-        hitBlockView.postStatus(HitBlockView.STATUS_GAME_PREPAR);
-        addView(hitBlockView);
+        funGameView = new HitBlockView(mContext, attrs);
+        funGameView.postStatus(HitBlockView.STATUS_GAME_PREPAR);
+        addView(funGameView);
 
         curtainReLayout = new RelativeLayout(mContext);
         maskReLayout = new RelativeLayout(mContext);
@@ -64,7 +64,7 @@ public class HitBlockHeader extends FrameLayout {
 
         coverMaskView();
 
-        hitBlockView.getViewTreeObserver().addOnGlobalLayoutListener(new MeasureListener());
+        funGameView.getViewTreeObserver().addOnGlobalLayoutListener(new MeasureListener());
 
     }
 
@@ -89,14 +89,14 @@ public class HitBlockHeader extends FrameLayout {
 
     public void moveRacket(float distance) {
         if (isStart)
-        hitBlockView.moveRacket(distance);
+        funGameView.moveController(distance);
     }
 
     private class MeasureListener implements ViewTreeObserver.OnGlobalLayoutListener {
 
         @Override
         public void onGlobalLayout() {
-            halfHitBlockHeight = (int) ((hitBlockView.getHeight() - 2 * HitBlockView.DIVIDING_LINE_SIZE) * .5f);
+            halfHitBlockHeight = (int) ((funGameView.getHeight() - 2 * HitBlockView.DIVIDING_LINE_SIZE) * .5f);
             RelativeLayout.LayoutParams topRelayLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, halfHitBlockHeight);
             RelativeLayout.LayoutParams bottomRelayLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, halfHitBlockHeight);
             bottomRelayLayoutParams.topMargin = halfHitBlockHeight;
@@ -128,7 +128,7 @@ public class HitBlockHeader extends FrameLayout {
                 bottomMaskView.setVisibility(View.GONE);
                 maskReLayout.setVisibility(View.GONE);
 
-                hitBlockView.postStatus(HitBlockView.STATUS_GAME_PLAY);
+                funGameView.postStatus(HitBlockView.STATUS_GAME_PLAY);
             }
         });
     }
@@ -164,7 +164,7 @@ public class HitBlockHeader extends FrameLayout {
 
     public void postEnd() {
         isStart = false;
-        hitBlockView.postStatus(HitBlockView.STATUS_GAME_PREPAR);
+        funGameView.postStatus(HitBlockView.STATUS_GAME_PREPAR);
 
         topMaskView.setTranslationY(topMaskView.getTranslationY() + halfHitBlockHeight);
         bottomMaskView.setTranslationY(bottomMaskView.getTranslationY() - halfHitBlockHeight);
@@ -176,7 +176,7 @@ public class HitBlockHeader extends FrameLayout {
     }
 
     public void postComplete() {
-        hitBlockView.postStatus(HitBlockView.STATUS_GAME_FINISHED);
+        funGameView.postStatus(HitBlockView.STATUS_GAME_FINISHED);
     }
 
 }

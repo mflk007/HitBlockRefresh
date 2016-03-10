@@ -4,7 +4,8 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 /**
- * Created by ZhaoFan on 2016/3/10.
+ * Created by Hitomis on 2016/3/10.
+ * email:196425254@qq.com
  */
 public class FunGameFactory {
 

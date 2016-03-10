@@ -6,14 +6,16 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.SparseArray;
-import android.view.MotionEvent;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
+/**
+ * Created by Hitomis on 2016/3/09.
+ * email:196425254@qq.com
+ */
 public class BattleCityView extends FunGameView {
 
     private static final String tag = "BattleCityView";
@@ -30,13 +32,15 @@ public class BattleCityView extends FunGameView {
 
     private Queue<Point> mBulletList;
 
+    private Point usedBullet;
+
     private Random random;
 
-    private float selfTankTop, heightSize;
+    private float heightSize;
 
     private float bulletRadius;
 
-    private int tankSize, barrelSize, tankSpaceSize, bulletSpaceSize;
+    private int barrelSize, tankSpaceSize, bulletSpaceSize;
 
     private int enemySpeed = 2, bulletSpeed = 7;
 
@@ -60,15 +64,28 @@ public class BattleCityView extends FunGameView {
     protected void initConcreteView() {
         random = new Random();
 
-        selfTankTop = DIVIDING_LINE_SIZE;
-
         heightSize = screenHeight * VIEW_HEIGHT_RATIO;
-        tankSize = (int) (Math.floor((heightSize - (TANK_ROW_NUM + 1) * DIVIDING_LINE_SIZE) / TANK_ROW_NUM + .5f));
-        barrelSize = (int) Math.floor(tankSize * TANK_BARREL_RATIO + .5f);
-        tankSpaceSize = tankSize + barrelSize + TANK_EXTRA_SPACING;
+        controllerSize = (int) (Math.floor((heightSize - (TANK_ROW_NUM + 1) * DIVIDING_LINE_SIZE) / TANK_ROW_NUM + .5f));
+        barrelSize = (int) Math.floor(controllerSize * TANK_BARREL_RATIO + .5f);
+        tankSpaceSize = controllerSize + barrelSize + TANK_EXTRA_SPACING;
         bulletSpaceSize = (int) (screenWidth * BULLET_NUM_RATIO);
 
         bulletRadius = (barrelSize - 2 * DIVIDING_LINE_SIZE) * .5f;
+
+        resetConfigParams();
+    }
+
+    @Override
+    protected void drawGame(Canvas canvas) {
+        drawEnemyTank(canvas);
+        drawSelfTank(canvas);
+        if (status >=STATUS_GAME_PLAY && status<= STATUS_GAME_FINISHED)
+            makeBulletPath(canvas);
+    }
+
+    @Override
+    protected void resetConfigParams() {
+        controllerPosition = DIVIDING_LINE_SIZE;
 
         eTankSparseArray = new SparseArray<>();
         int option = apperanceOption();
@@ -84,27 +101,10 @@ public class BattleCityView extends FunGameView {
     }
 
     private RectF generateEnemyTank(int index) {
-        float left = - (tankSize + barrelSize);
-        float top = index * (tankSize + DIVIDING_LINE_SIZE) + DIVIDING_LINE_SIZE ;
-        return new RectF(left, top, left + tankSize, top + tankSize);
+        float left = - (controllerSize + barrelSize);
+        float top = index * (controllerSize + DIVIDING_LINE_SIZE) + DIVIDING_LINE_SIZE ;
+        return new RectF(left, top, left + controllerSize, top + controllerSize);
     }
-
-
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-    }
-
-    @Override
-    protected void drawGame(Canvas canvas) {
-        drawEnemyTank(canvas);
-
-        drawSelfTank(canvas);
-
-        makeBulletPath(canvas);
-    }
-
-    private Point usedBullet;
 
     private void makeBulletPath(Canvas canvas) {
         offsetMBulletX += bulletSpeed;
@@ -117,8 +117,8 @@ public class BattleCityView extends FunGameView {
 
         if (isLaunch) {
             Point bulletPoint = new Point();
-            bulletPoint.x = screenWidth - tankSize - barrelSize;
-            bulletPoint.y = (int) (selfTankTop + tankSize * .5f);
+            bulletPoint.x = screenWidth - controllerSize - barrelSize;
+            bulletPoint.y = (int) (controllerPosition + controllerSize * .5f);
             mBulletList.offer(bulletPoint);
         }
 
@@ -166,11 +166,11 @@ public class BattleCityView extends FunGameView {
     }
 
     private void drawSelfTank(Canvas canvas) {
-        canvas.drawRect(screenWidth - tankSize, selfTankTop, screenWidth, selfTankTop + tankSize, mPaint);
-        canvas.drawRect(screenWidth - tankSize - barrelSize,
-                selfTankTop + (tankSize - barrelSize) * .5f,
-                screenWidth - tankSize,
-                selfTankTop + (tankSize - barrelSize) * .5f + barrelSize,
+        canvas.drawRect(screenWidth - controllerSize, controllerPosition, screenWidth, controllerPosition + controllerSize, mPaint);
+        canvas.drawRect(screenWidth - controllerSize - barrelSize,
+                controllerPosition + (controllerSize - barrelSize) * .5f,
+                screenWidth - controllerSize,
+                controllerPosition + (controllerSize - barrelSize) * .5f + barrelSize,
                 mPaint);
     }
 
@@ -213,41 +213,13 @@ public class BattleCityView extends FunGameView {
     private void drawTank(Canvas canvas, RectF rectF) {
         rectF.set(rectF.left + enemySpeed, rectF.top, rectF.right + enemySpeed, rectF.bottom);
         canvas.drawRect(rectF, mPaint);
-        float barrelTop = rectF.top + (tankSize - barrelSize) * .5f;
+        float barrelTop = rectF.top + (controllerSize - barrelSize) * .5f;
         canvas.drawRect(rectF.right, barrelTop, rectF.right + barrelSize, barrelTop + barrelSize, mPaint);
 
     }
 
     private int apperanceOption() {
         return random.nextInt(TANK_ROW_NUM);
-    }
-
-    public void moveController(float distance) {
-        float maxDistance = (getMeasuredHeight() -  2 * DIVIDING_LINE_SIZE - tankSize);
-
-        if (distance > maxDistance) {
-            distance = maxDistance;
-        }
-
-        selfTankTop += distance;
-        postInvalidate();
-    }
-
-
-    private float preY;
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                preY = event.getRawY();
-                break;
-            case MotionEvent.ACTION_MOVE:
-                float distance = event.getRawY() - preY;
-                preY = event.getRawY();
-                moveController(distance);
-                break;
-        }
-        return true;
     }
 
 }

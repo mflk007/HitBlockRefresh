@@ -8,8 +8,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
-import android.view.WindowManager;
 
 import com.zuck.swipe.hitblockrefresh.R;
 
@@ -18,6 +16,7 @@ import java.util.List;
 
 /**
  * Created by Hitomis on 2016/2/29.
+ * email:196425254@qq.com
  */
 public class HitBlockView extends FunGameView {
 
@@ -78,17 +77,13 @@ public class HitBlockView extends FunGameView {
 
     private Paint blockPaint;
 
-    private float blockLeft;
-
-    private float racketLeft, racketTop, racketHeight;
+    private float blockLeft, racketLeft;
 
     private float cx, cy;
 
     private List<Point> pointList;
 
     private boolean isleft;
-
-    private int status = STATUS_GAME_PREPAR;
 
     private int angle;
 
@@ -108,29 +103,7 @@ public class HitBlockView extends FunGameView {
 
     public HitBlockView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-
         initAttrs(context, attrs);
-    }
-
-    @Override
-    protected void initConcreteView() {
-        blockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        blockPaint.setStyle(Paint.Style.FILL);
-
-        blockHeight = screenHeight * BLOCK_HEIGHT_RATIO;
-        blockWidth = screenWidth * BLOCK_WIDTH_RATIO;
-    }
-
-    @Override
-    protected void drawGame(Canvas canvas) {
-        drawColorBlock(canvas);
-
-        drawRacket(canvas);
-
-        if (status >=STATUS_GAME_PLAY && status<= STATUS_GAME_FINISHED)
-            makeBallPath(canvas);
-
-        drawText(canvas);
     }
 
     private void initAttrs(Context context, AttributeSet attrs) {
@@ -147,25 +120,34 @@ public class HitBlockView extends FunGameView {
     }
 
     @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
+    protected void initConcreteView() {
+        blockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        blockPaint.setStyle(Paint.Style.FILL);
+
+        blockHeight = screenHeight * BLOCK_HEIGHT_RATIO;
+        blockWidth = screenWidth * BLOCK_WIDTH_RATIO;
 
         blockLeft = screenWidth * BLOCK_POSITION_RATIO;
-
         racketLeft = screenWidth * RACKET_POSITION_RATIO;
 
-        racketHeight = (int) (blockHeight * 1.6f);
-
-        if (status == STATUS_GAME_PREPAR) {
-            initParams();
-        }
+        controllerSize = (int) (blockHeight * 1.6f);
     }
 
-    private void initParams() {
+    @Override
+    protected void drawGame(Canvas canvas) {
+        drawColorBlock(canvas);
+        drawRacket(canvas);
+
+        if (status >=STATUS_GAME_PLAY && status<= STATUS_GAME_FINISHED)
+            makeBallPath(canvas);
+    }
+
+    @Override
+     protected void resetConfigParams() {
         cx = racketLeft - 2 * BALL_RADIUS;
         cy = (int) (getHeight() * .5f);
 
-        racketTop = 0;
+        controllerPosition = DIVIDING_LINE_SIZE;
 
         angle = DEFAULT_ANGLE;
 
@@ -178,44 +160,13 @@ public class HitBlockView extends FunGameView {
         }
     }
 
-
-    private void drawText(Canvas canvas) {
-        switch (status) {
-            case STATUS_GAME_PREPAR:
-            case STATUS_GAME_PLAY:
-                textPaint.setTextSize(60);
-                promptText(canvas, TEXT_LOADING);
-                break;
-            case STATUS_GAME_FINISHED:
-                textPaint.setTextSize(50);
-                promptText(canvas, TEXT_LOADING_FINISHED);
-                break;
-            case STATUS_GAME_OVER:
-                textPaint.setTextSize(60);
-                promptText(canvas, TEXT_GAME_OVER);
-                break;
-        }
-    }
-
-
-
-    /**
-     * 绘制分割线
-     * @param canvas 默认画布
-     */
-    private void drawBoundary(Canvas canvas) {
-        mPaint.setColor(Color.parseColor("#606060"));
-        canvas.drawLine(0, 0, screenWidth, 0, mPaint);
-        canvas.drawLine(0, getMeasuredHeight(), screenWidth, getMeasuredHeight(), mPaint);
-    }
-
     /**
      * 绘制挡板
      * @param canvas 默认画布
      */
     private void drawRacket(Canvas canvas) {
         mPaint.setColor(racketColor);
-        canvas.drawRect(racketLeft, racketTop, racketLeft + blockWidth, racketTop + racketHeight, mPaint);
+        canvas.drawRect(racketLeft, controllerPosition, racketLeft + blockWidth, controllerPosition + controllerSize, mPaint);
     }
 
     /**
@@ -266,12 +217,6 @@ public class HitBlockView extends FunGameView {
 
     }
 
-    private void promptText(Canvas canvas, String text) {
-        float textX = (canvas.getWidth() - textPaint.measureText(text)) * .5f;
-        float textY = canvas.getHeight()  * .5f - (textPaint.ascent() + textPaint.descent()) * .5f;
-        canvas.drawText(text, textX, textY, textPaint);
-    }
-
     /**
      * 检查小球是否撞击到挡板
      * @param y 小球当前坐标Y值
@@ -279,8 +224,8 @@ public class HitBlockView extends FunGameView {
      */
     private boolean checkTouchRacket(float y) {
         boolean flag = false;
-        float diffVal = y - racketTop;
-        if (diffVal >= 0 && diffVal <= racketHeight) { // 小球位于挡板Y值区域范围内
+        float diffVal = y - controllerPosition;
+        if (diffVal >= 0 && diffVal <= controllerSize) { // 小球位于挡板Y值区域范围内
             flag = true;
         }
         return flag;
@@ -345,41 +290,6 @@ public class HitBlockView extends FunGameView {
             top = DIVIDING_LINE_SIZE + row * (blockHeight + DIVIDING_LINE_SIZE);
             canvas.drawRect(left, top, left + blockWidth, top + blockHeight, blockPaint);
         }
-    }
-
-
-    /**
-     * 控制挡板上下移动
-     * @param distance 挡板移动的距离，正数：下移，负数：上移
-     */
-    public void moveRacket(float distance) {
-        float maxDistance = (getMeasuredHeight() -  2 * DIVIDING_LINE_SIZE - racketHeight);
-
-        if (distance > maxDistance) {
-            distance = maxDistance;
-        }
-
-        racketTop = distance;
-        postInvalidate();
-    }
-
-    public void postStatus(int status) {
-        this.status = status;
-        postInvalidate();
-        requestLayout();
-    }
-
-    /**
-     * 获取屏幕宽度
-     *
-     * @param context context
-     * @return 手机屏幕宽度
-     */
-    public int getScreenWidth(Context context) {
-        WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        manager.getDefaultDisplay().getMetrics(dm);
-        return dm.widthPixels;
     }
 
 }
