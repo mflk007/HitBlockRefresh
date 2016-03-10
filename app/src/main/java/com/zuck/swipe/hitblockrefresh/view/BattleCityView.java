@@ -147,6 +147,11 @@ public class BattleCityView extends FunGameView {
     protected void resetConfigParams() {
         controllerPosition = DIVIDING_LINE_SIZE;
 
+        status = FunGameView.STATUS_GAME_PREPAR;
+
+        enemySpeed = 2;
+        bulletSpeed = 7;
+
         levelNum = DEFAULT_TANK_MAGIC_TOTAL_NUM;
         wipeOutNum = 0;
 
@@ -259,7 +264,6 @@ public class BattleCityView extends FunGameView {
 
         if (bulletSpace > 30)
         bulletSpace -= 30;
-
     }
 
     /**
