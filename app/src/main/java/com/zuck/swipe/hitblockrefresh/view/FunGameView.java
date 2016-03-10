@@ -44,13 +44,13 @@ abstract class FunGameView extends View {
 
     protected TextPaint textPaint;
 
-    float controllerPosition;
+    protected float controllerPosition;
 
-    int controllerSize;
+    protected int controllerSize;
 
-    int screenWidth, screenHeight;
+    protected int screenWidth, screenHeight;
 
-    int status = STATUS_GAME_PREPAR;
+    protected int status = STATUS_GAME_PREPAR;
 
     public FunGameView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
