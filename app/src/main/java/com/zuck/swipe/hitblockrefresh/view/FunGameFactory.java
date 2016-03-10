@@ -18,7 +18,7 @@ public class FunGameFactory {
     static FunGameView createFunGameView(Context context, AttributeSet attributeSet, int type) {
         FunGameView funGameView = null;
         switch (type) {
-            case  HITBLOCK:
+            case HITBLOCK:
                 funGameView = new HitBlockView(context, attributeSet);
                 break;
             case BATTLECITY:
