@@ -3,44 +3,28 @@ package com.zuck.swipe.hitblockrefresh.view;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.RectF;
-import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
-import android.view.View;
-import android.view.WindowManager;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
-public class BattleCityView extends View {
+public class BattleCityView extends FunGameView {
 
     private static final String tag = "BattleCityView";
 
     private static int TANK_ROW_NUM = 3;
-
-    /**
-     * 分割线默认宽度大小
-     */
-    static final float DIVIDING_LINE_SIZE = 1.f;
-
-    static final float VIEW_HEIGHT_RATIO = .161f;
 
     static final float TANK_BARREL_RATIO = 1/3.f;
 
     static final float BULLET_NUM_RATIO = .4f;
 
     static final int TANK_EXTRA_SPACING = 10;
-
-    private Paint mPaint;
-
-    private TextPaint textPaint;
 
     private SparseArray<Queue<RectF>> eTankSparseArray;
 
@@ -52,11 +36,9 @@ public class BattleCityView extends View {
 
     private float bulletRadius;
 
-    private int screenWidth, screenHeight;
-
     private int tankSize, barrelSize, tankSpaceSize, bulletSpaceSize;
 
-    private int enemySpeed = 3, bulletSpeed = 8;
+    private int enemySpeed = 2, bulletSpeed = 7;
 
     private int offsetETankX, offsetMBulletX;
 
@@ -72,22 +54,11 @@ public class BattleCityView extends View {
 
     public BattleCityView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initTools();
-        initConfigParams(context);
     }
 
-    private void initTools() {
-        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mPaint.setStrokeWidth(DIVIDING_LINE_SIZE);
-
-        textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-
+    @Override
+    protected void initConcreteView() {
         random = new Random();
-    }
-
-    private void initConfigParams(Context context) {
-        screenWidth = getScreenMetrics(context).widthPixels;
-        screenHeight = getScreenMetrics(context).heightPixels;
 
         selfTankTop = DIVIDING_LINE_SIZE;
 
@@ -118,10 +89,6 @@ public class BattleCityView extends View {
         return new RectF(left, top, left + tankSize, top + tankSize);
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(screenWidth, (int) heightSize);
-    }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
@@ -129,10 +96,7 @@ public class BattleCityView extends View {
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
-
-        drawBoundary(canvas);
-
+    protected void drawGame(Canvas canvas) {
         drawEnemyTank(canvas);
 
         drawSelfTank(canvas);
@@ -181,7 +145,6 @@ public class BattleCityView extends View {
     private boolean checkWipeOutETank(Point point) {
         boolean beHit = false;
         int index = point.y / (getMeasuredHeight() / TANK_ROW_NUM);
-        Log.d(tag, "****************** : " + "<" + String.valueOf(index) + ">");
         index = index == TANK_ROW_NUM ? TANK_ROW_NUM - 1 : index;
         index = index == -1 ? 0 : index;
         Queue<RectF> rectFQueue = eTankSparseArray.get(index);
@@ -211,11 +174,6 @@ public class BattleCityView extends View {
                 mPaint);
     }
 
-    private void drawBoundary(Canvas canvas) {
-        mPaint.setColor(Color.parseColor("#606060"));
-        canvas.drawLine(0, 0, screenWidth, 0, mPaint);
-        canvas.drawLine(0, getMeasuredHeight(), screenWidth, getMeasuredHeight(), mPaint);
-    }
 
     private void drawEnemyTank(Canvas canvas) {
         mPaint.setColor(Color.parseColor("#909090"));
@@ -275,6 +233,7 @@ public class BattleCityView extends View {
         postInvalidate();
     }
 
+
     private float preY;
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -289,19 +248,6 @@ public class BattleCityView extends View {
                 break;
         }
         return true;
-    }
-
-    /**
-     * 获取屏幕宽度
-     *
-     * @param context context
-     * @return 手机屏幕宽度
-     */
-    public DisplayMetrics getScreenMetrics(Context context) {
-        WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        manager.getDefaultDisplay().getMetrics(dm);
-        return dm;
     }
 
 }

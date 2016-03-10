@@ -1,17 +1,14 @@
 package com.zuck.swipe.hitblockrefresh.view;
 
 
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
-import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.view.View;
 import android.view.WindowManager;
 
 import com.zuck.swipe.hitblockrefresh.R;
@@ -22,15 +19,7 @@ import java.util.List;
 /**
  * Created by Hitomis on 2016/2/29.
  */
-public class HitBlockView extends View {
-
-    public static final int STATUS_GAME_PREPAR = 0;
-
-    public static final int STATUS_GAME_PLAY = 1;
-
-    public static final int STATUS_GAME_FINISHED = 2;
-
-    public static final int STATUS_GAME_OVER = 3;
+public class HitBlockView extends FunGameView {
 
     /**
      * 默认矩形块竖向排列的数目
@@ -41,6 +30,16 @@ public class HitBlockView extends View {
      * 默认矩形块横向排列的数目
      */
     private static final int BLOCK_HORIZONTAL_NUM = 3;
+
+    /**
+     * 矩形块的高度占屏幕高度比率
+     */
+    private static final float BLOCK_HEIGHT_RATIO = .03125f;
+
+    /**
+     * 矩形块的宽度占屏幕宽度比率
+     */
+    private static final float BLOCK_WIDTH_RATIO = .01806f;
 
     /**
      * 挡板所在位置占屏幕宽度的比率
@@ -68,37 +67,22 @@ public class HitBlockView extends View {
     private static final int SPEED = 6;
 
     /**
-     * 矩形块的高度
+     * 矩形砖块的高度、宽度
      */
-    private static final float BLOCK_HEIGHT = 40.f;
-
-    /**
-     * 矩形块的宽度
-     */
-    private static final float BLOCK_WIDTH = 13.f;
+    private float blockHeight, blockWidth;
 
     /**
      * 小球半径
      */
     private static final float BALL_RADIUS = 8.f;
 
-    private static final String TEXT_GAME_OVER = "Game Over";
-
-    private static final String TEXT_LOADING = "Loading...";
-
-    private static final String TEXT_LOADING_FINISHED = "Loading Finished";
-
-    private Paint mPaint, blockPaint;
-
-    private TextPaint textPaint;
+    private Paint blockPaint;
 
     private float blockLeft;
 
     private float racketLeft, racketTop, racketHeight;
 
     private float cx, cy;
-
-    private int screenWidth;
 
     private List<Point> pointList;
 
@@ -124,10 +108,29 @@ public class HitBlockView extends View {
 
     public HitBlockView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        screenWidth = getScreenWidth(context);
 
         initAttrs(context, attrs);
-        initTools();
+    }
+
+    @Override
+    protected void initConcreteView() {
+        blockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        blockPaint.setStyle(Paint.Style.FILL);
+
+        blockHeight = screenHeight * BLOCK_HEIGHT_RATIO;
+        blockWidth = screenWidth * BLOCK_WIDTH_RATIO;
+    }
+
+    @Override
+    protected void drawGame(Canvas canvas) {
+        drawColorBlock(canvas);
+
+        drawRacket(canvas);
+
+        if (status >=STATUS_GAME_PLAY && status<= STATUS_GAME_FINISHED)
+            makeBallPath(canvas);
+
+        drawText(canvas);
     }
 
     private void initAttrs(Context context, AttributeSet attrs) {
@@ -143,18 +146,22 @@ public class HitBlockView extends View {
         typedArray.recycle();
     }
 
-    private void initTools() {
-        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mPaint.setStrokeWidth(DIVIDING_LINE_SIZE);
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
 
-        blockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        blockPaint.setStyle(Paint.Style.FILL);
+        blockLeft = screenWidth * BLOCK_POSITION_RATIO;
 
-        textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        textPaint.setColor(Color.parseColor("#C1C2C2"));
+        racketLeft = screenWidth * RACKET_POSITION_RATIO;
+
+        racketHeight = (int) (blockHeight * 1.6f);
+
+        if (status == STATUS_GAME_PREPAR) {
+            initParams();
+        }
     }
 
-    private void initConfigParams() {
+    private void initParams() {
         cx = racketLeft - 2 * BALL_RADIUS;
         cy = (int) (getHeight() * .5f);
 
@@ -171,42 +178,6 @@ public class HitBlockView extends View {
         }
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int height = (int) Math.ceil(BLOCK_VERTICAL_NUM * BLOCK_HEIGHT + (BLOCK_VERTICAL_NUM - 1) * DIVIDING_LINE_SIZE + DIVIDING_LINE_SIZE * 2);
-        setMeasuredDimension(screenWidth, height);
-    }
-
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-
-        blockLeft = screenWidth * BLOCK_POSITION_RATIO;
-
-        racketLeft = screenWidth * RACKET_POSITION_RATIO;
-
-        racketHeight = (int) (BLOCK_HEIGHT * 1.6f);
-
-        if (status == STATUS_GAME_PREPAR) {
-            initConfigParams();
-        }
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        drawBoundary(canvas);
-
-        drawColorBlock(canvas);
-
-        drawRacket(canvas);
-
-        if (status >=STATUS_GAME_PLAY && status<= STATUS_GAME_FINISHED)
-        makeBallPath(canvas);
-
-        drawText(canvas);
-    }
 
     private void drawText(Canvas canvas) {
         switch (status) {
@@ -235,7 +206,7 @@ public class HitBlockView extends View {
     private void drawBoundary(Canvas canvas) {
         mPaint.setColor(Color.parseColor("#606060"));
         canvas.drawLine(0, 0, screenWidth, 0, mPaint);
-        canvas.drawLine(0, getHeight(), screenWidth, getHeight(), mPaint);
+        canvas.drawLine(0, getMeasuredHeight(), screenWidth, getMeasuredHeight(), mPaint);
     }
 
     /**
@@ -244,7 +215,7 @@ public class HitBlockView extends View {
      */
     private void drawRacket(Canvas canvas) {
         mPaint.setColor(racketColor);
-        canvas.drawRect(racketLeft, racketTop, racketLeft + BLOCK_WIDTH, racketTop + racketHeight, mPaint);
+        canvas.drawRect(racketLeft, racketTop, racketLeft + blockWidth, racketTop + racketHeight, mPaint);
     }
 
     /**
@@ -254,7 +225,7 @@ public class HitBlockView extends View {
     private void makeBallPath(Canvas canvas) {
         mPaint.setColor(ballColor);
 
-        if (cx <= blockLeft +  blockHorizontalNum * BLOCK_WIDTH + (blockHorizontalNum - 1) * DIVIDING_LINE_SIZE + BALL_RADIUS) { // 小球进入到色块区域
+        if (cx <= blockLeft +  blockHorizontalNum * blockWidth + (blockHorizontalNum - 1) * DIVIDING_LINE_SIZE + BALL_RADIUS) { // 小球进入到色块区域
             if (checkTouchBlock(cx, cy)) { // 反弹回来
                 isleft = false;
             }
@@ -263,7 +234,7 @@ public class HitBlockView extends View {
             isleft = false;
         }
 
-        if (cx + BALL_RADIUS >= racketLeft && cx - BALL_RADIUS < racketLeft + BLOCK_WIDTH) { //小球当前坐标X值在挡板X值区域范围内
+        if (cx + BALL_RADIUS >= racketLeft && cx - BALL_RADIUS < racketLeft + blockWidth) { //小球当前坐标X值在挡板X值区域范围内
             if (checkTouchRacket(cy)) { // 小球与挡板接触
                 if (pointList.size() == blockHorizontalNum * BLOCK_VERTICAL_NUM) { // 矩形块全部被消灭，游戏结束
                     status = STATUS_GAME_OVER;
@@ -277,7 +248,7 @@ public class HitBlockView extends View {
 
         if (cy <= BALL_RADIUS + DIVIDING_LINE_SIZE) { // 小球撞到上边界
             angle = 180 - DEFAULT_ANGLE;
-        } else if (cy >= getHeight() - BALL_RADIUS - DIVIDING_LINE_SIZE) { // 小球撞到下边界
+        } else if (cy >= getMeasuredHeight() - BALL_RADIUS - DIVIDING_LINE_SIZE) { // 小球撞到下边界
             angle = 180 + DEFAULT_ANGLE;
         }
 
@@ -322,9 +293,9 @@ public class HitBlockView extends View {
      * @return 撞击到：true，反之：false
      */
     private boolean checkTouchBlock(float x, float y) {
-        int columnX = (int) ((x - blockLeft - BALL_RADIUS - speed ) / BLOCK_WIDTH);
+        int columnX = (int) ((x - blockLeft - BALL_RADIUS - speed ) / blockWidth);
         columnX = columnX == blockHorizontalNum ? columnX - 1 : columnX;
-        int rowY = (int) (y / BLOCK_HEIGHT);
+        int rowY = (int) (y / blockHeight);
         rowY = rowY == BLOCK_VERTICAL_NUM ? rowY - 1 : rowY;
         Point p = new Point();
         p.set(columnX, rowY);
@@ -370,9 +341,9 @@ public class HitBlockView extends View {
             blueCode = (Color.blue(blockColor) / blockHorizontalNum) * column;
             blockPaint.setColor(Color.rgb(redCode, greenCode, blueCode));
 
-            left = blockLeft + column * (BLOCK_WIDTH + DIVIDING_LINE_SIZE);
-            top = DIVIDING_LINE_SIZE + row * (BLOCK_HEIGHT + DIVIDING_LINE_SIZE);
-            canvas.drawRect(left, top, left + BLOCK_WIDTH, top + BLOCK_HEIGHT, blockPaint);
+            left = blockLeft + column * (blockWidth + DIVIDING_LINE_SIZE);
+            top = DIVIDING_LINE_SIZE + row * (blockHeight + DIVIDING_LINE_SIZE);
+            canvas.drawRect(left, top, left + blockWidth, top + blockHeight, blockPaint);
         }
     }
 
@@ -382,7 +353,7 @@ public class HitBlockView extends View {
      * @param distance 挡板移动的距离，正数：下移，负数：上移
      */
     public void moveRacket(float distance) {
-        float maxDistance = (getHeight() -  2 * DIVIDING_LINE_SIZE - racketHeight);
+        float maxDistance = (getMeasuredHeight() -  2 * DIVIDING_LINE_SIZE - racketHeight);
 
         if (distance > maxDistance) {
             distance = maxDistance;
