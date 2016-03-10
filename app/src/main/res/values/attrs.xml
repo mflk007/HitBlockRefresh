@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <declare-styleable name="fun_game">
+        <attr name="game_type" format="enum">
+            <enum name="hit_block" value="0" />
+            <enum name="battle_city" value="1" />
+        </attr>
+    </declare-styleable>
+
     <!-- HitBlockRefreshView -->
     <declare-styleable name="HitBlock">
         <attr name="block_horizontal_num" format="integer" />
