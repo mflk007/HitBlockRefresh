@@ -11,8 +11,7 @@
         android:id="@+id/refresh_hit_block"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:block_horizontal_num="3"
-        app:ball_speed="medium">
+        app:game_type="battle_city">
 
         <ListView
             android:id="@+id/list_view"
