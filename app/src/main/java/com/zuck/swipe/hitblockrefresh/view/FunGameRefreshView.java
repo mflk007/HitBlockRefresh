@@ -17,10 +17,7 @@ import java.util.concurrent.Executors;
 /**
  * Created by Hitomis on 2016/3/2.
  */
-public class HitBlockRefreshView extends LinearLayout implements View.OnTouchListener {
-
-    private static final String tag = "HitBlockRefreshView";
-
+public class FunGameRefreshView extends LinearLayout implements View.OnTouchListener {
     /**
      * 下拉状态
      */
@@ -59,7 +56,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
     /**
      * 下拉头的View
      */
-    private HitBlockHeader header;
+    private FunGameHeader header;
 
     /**
      * 需要去下拉刷新的ListView
@@ -103,15 +100,15 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
 
     private int tempHeaderTopMargin;
 
-    public HitBlockRefreshView(Context context) {
+    public FunGameRefreshView(Context context) {
         this(context, null);
     }
 
-    public HitBlockRefreshView(Context context, AttributeSet attrs) {
+    public FunGameRefreshView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public HitBlockRefreshView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public FunGameRefreshView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setOrientation(VERTICAL);
         touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
@@ -119,7 +116,7 @@ public class HitBlockRefreshView extends LinearLayout implements View.OnTouchLis
     }
 
     private void initView(Context context, AttributeSet attrs) {
-        header = new HitBlockHeader(context, attrs);
+        header = new FunGameHeader(context, attrs);
         addView(header, 0);
     }
 
