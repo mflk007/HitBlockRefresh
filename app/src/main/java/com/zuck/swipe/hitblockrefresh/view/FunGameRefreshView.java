@@ -51,7 +51,7 @@ public class FunGameRefreshView extends LinearLayout implements View.OnTouchList
     /**
      * 下拉刷新的回调接口
      */
-    private HitBlockRefreshListener mListener;
+    private FunGameRefreshListener mListener;
 
     /**
      * 下拉头的View
@@ -264,7 +264,7 @@ public class FunGameRefreshView extends LinearLayout implements View.OnTouchList
      * @param listener
      *            监听器的实现。
      */
-    public void setOnRefreshListener(HitBlockRefreshListener listener) {
+    public void setOnRefreshListener(FunGameRefreshListener listener) {
         mListener = listener;
     }
 
@@ -343,7 +343,7 @@ public class FunGameRefreshView extends LinearLayout implements View.OnTouchList
     /**
      * 下拉刷新的监听器，使用下拉刷新的地方应该注册此监听器来获取刷新回调。
      */
-    public interface HitBlockRefreshListener {
+    public interface FunGameRefreshListener {
         /**
          * 刷新时回调方法
          */
