@@ -91,8 +91,6 @@ public class HitBlockView extends FunGameView {
 
     private int speed;
 
-    private int blockColor, ballColor, racketColor;
-
     public HitBlockView(Context context) {
         this(context, null);
     }
@@ -108,14 +106,8 @@ public class HitBlockView extends FunGameView {
 
     private void initAttrs(Context context, AttributeSet attrs) {
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.HitBlock);
-
         blockHorizontalNum = typedArray.getInt(R.styleable.HitBlock_block_horizontal_num, BLOCK_HORIZONTAL_NUM);
         speed = typedArray.getInt(R.styleable.HitBlock_ball_speed, SPEED);
-
-        blockColor = typedArray.getColor(R.styleable.HitBlock_block_color, Color.rgb(255, 255, 255));
-        ballColor = typedArray.getColor(R.styleable.HitBlock_ball_color, Color.BLACK);
-        racketColor = typedArray.getColor(R.styleable.HitBlock_racket_color, Color.parseColor("#A5A5A5"));
-
         typedArray.recycle();
     }
 
@@ -165,7 +157,7 @@ public class HitBlockView extends FunGameView {
      * @param canvas 默认画布
      */
     private void drawRacket(Canvas canvas) {
-        mPaint.setColor(racketColor);
+        mPaint.setColor(rModelColor);
         canvas.drawRect(racketLeft, controllerPosition, racketLeft + blockWidth, controllerPosition + controllerSize, mPaint);
     }
 
@@ -174,7 +166,7 @@ public class HitBlockView extends FunGameView {
      * @param canvas 默认画布
      */
     private void makeBallPath(Canvas canvas) {
-        mPaint.setColor(ballColor);
+        mPaint.setColor(mModelColor);
 
         if (cx <= blockLeft +  blockHorizontalNum * blockWidth + (blockHorizontalNum - 1) * DIVIDING_LINE_SIZE + BALL_RADIUS) { // 小球进入到色块区域
             if (checkTouchBlock(cx, cy)) { // 反弹回来
@@ -281,9 +273,9 @@ public class HitBlockView extends FunGameView {
                 continue;
             }
 
-            redCode = (Color.red(blockColor) / blockHorizontalNum) * column;
-            greenCode = (Color.green(blockColor) / blockHorizontalNum) * column;
-            blueCode = (Color.blue(blockColor) / blockHorizontalNum) * column;
+            redCode = 255 - (255 - Color.red(lModelColor)) / (column + 1);
+            greenCode = 255 - (255 - Color.green(lModelColor)) / (column + 1);
+            blueCode = 255 - (255 - Color.blue(lModelColor)) / (column + 1);
             blockPaint.setColor(Color.rgb(redCode, greenCode, blueCode));
 
             left = blockLeft + column * (blockWidth + DIVIDING_LINE_SIZE);
