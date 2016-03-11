@@ -27,19 +27,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        refreshView = (FunGameRefreshView) findViewById(R.id.refresh_hit_block);
+        refreshView = (FunGameRefreshView) findViewById(R.id.refresh_fun_game);
 
         listView = (ListView) findViewById(R.id.list_view);
 
         arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, createDate());
 
         listView.setAdapter(arrayAdapter);
-        refreshView.setOnRefreshListener(new FunGameRefreshView.HitBlockRefreshListener() {
+        refreshView.setOnRefreshListener(new FunGameRefreshView.FunGameRefreshListener() {
             @Override
             public void onRefreshing() {
                 try {
                     // 模拟网络请求耗时动作
-                    Thread.sleep(2000);
+                    Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
