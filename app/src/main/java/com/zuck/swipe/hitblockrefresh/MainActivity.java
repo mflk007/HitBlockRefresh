@@ -1,21 +1,20 @@
 package com.zuck.swipe.hitblockrefresh;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
-import com.zuck.swipe.hitblockrefresh.view.HitBlockRefreshView;
+import com.zuck.swipe.hitblockrefresh.view.FunGameRefreshView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private HitBlockRefreshView refreshView;
+    private FunGameRefreshView refreshView;
 
     private ListView listView;
 
@@ -28,14 +27,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        refreshView = (HitBlockRefreshView) findViewById(R.id.refresh_hit_block);
+        refreshView = (FunGameRefreshView) findViewById(R.id.refresh_hit_block);
 
         listView = (ListView) findViewById(R.id.list_view);
 
         arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, createDate());
 
         listView.setAdapter(arrayAdapter);
-        refreshView.setOnRefreshListener(new HitBlockRefreshView.HitBlockRefreshListener() {
+        refreshView.setOnRefreshListener(new FunGameRefreshView.HitBlockRefreshListener() {
             @Override
             public void onRefreshing() {
                 try {
@@ -55,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
             dataList.add("X");
             arrayAdapter.notifyDataSetChanged();
             refreshView.finishRefreshing();
-            Toast.makeText(MainActivity.this, "Refresh complete!", Toast.LENGTH_SHORT).show();
         }
     };
 
