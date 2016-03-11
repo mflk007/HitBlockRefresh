@@ -23,7 +23,7 @@ import com.zuck.swipe.hitblockrefresh.R;
 /**
  * Created by Hitomis on 2016/3/1.
  */
-public class HitBlockHeader extends FrameLayout {
+public class FunGameHeader extends FrameLayout {
 
     private Context mContext;
 
@@ -40,21 +40,21 @@ public class HitBlockHeader extends FrameLayout {
     private boolean isStart = false;
 
 
-    public HitBlockHeader(Context context) {
+    public FunGameHeader(Context context) {
         this(context, null);
     }
 
-    public HitBlockHeader(Context context, AttributeSet attrs) {
+    public FunGameHeader(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
 
     }
 
-    public HitBlockHeader(Context context, AttributeSet attrs, int defStyleAttr) {
+    public FunGameHeader(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mContext = context;
 
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.fun_game);
-        headerType = typedArray.getInt(R.styleable.fun_game_game_type, FunGameFactory.HITBLOCK);
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.FunGameHeader);
+        headerType = typedArray.getInt(R.styleable.FunGameHeader_game_type, FunGameFactory.HITBLOCK);
         typedArray.recycle();
 
         initView(attrs);
