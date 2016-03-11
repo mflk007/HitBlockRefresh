@@ -1,6 +1,7 @@
 package com.zuck.swipe.hitblockrefresh.view;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -9,6 +10,8 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
+
+import com.zuck.swipe.hitblockrefresh.R;
 
 /**
  * Created by Hitomis on 2016/3/9.
@@ -52,8 +55,16 @@ abstract class FunGameView extends View {
 
     protected int status = STATUS_GAME_PREPAR;
 
+    protected int lModelColor, rModelColor, mModelColor;
+
     public FunGameView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.FunGame);
+        lModelColor = typedArray.getColor(R.styleable.FunGame_left_model_color, Color.rgb(0, 0, 0));
+        mModelColor = typedArray.getColor(R.styleable.FunGame_middle_model_color, Color.BLACK);
+        rModelColor = typedArray.getColor(R.styleable.FunGame_right_model_color, Color.parseColor("#A5A5A5"));
+        typedArray.recycle();
 
         initBaseTools();
         initBaseConfigParams(context);
