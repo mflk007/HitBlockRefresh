@@ -1,4 +1,4 @@
-# HitBlockRefresh
+# FunGameRefreshView
 有趣好玩的下拉刷新库, 你还记得小时候打的黑白掌上游戏机么？
 
 # Preview
@@ -6,7 +6,7 @@
 <img src="preview/HitBlock.gif"/>
 <img src="preview/BattleCity.gif"/>
 
-# FunGameRefreshView
+# FunGame
     目前支持两种游戏：打砖块和打坦克
         打砖块规则简单，没有接住小球即GameOVer;
         打坦克规则为：漏掉敌方坦克超过十辆或者与敌方坦克相撞即GameOVer，看看你能不能坚持三分钟吧。嘿嘿~;
