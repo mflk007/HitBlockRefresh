@@ -2,7 +2,6 @@ package com.zuck.swipe.hitblockrefresh.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.util.AttributeSet;
@@ -41,7 +40,7 @@ public class BattleCityView extends FunGameView {
     /**
      * 表示运行漏掉的敌方坦克总数量 和 升级后消灭坦克总数量的增量
      */
-    private static final int DEFAULT_TANK_MAGIC_TOTAL_NUM = 10;
+    private static final int DEFAULT_TANK_MAGIC_TOTAL_NUM = 8;
 
     /**
      * 所有轨道上敌方坦克矩阵集合
@@ -101,7 +100,7 @@ public class BattleCityView extends FunGameView {
     private int overstepNum;
 
     /**
-     * 当前难度等级
+     * 当前难度等级需要消灭坦克数量
      */
     private int levelNum;
 
@@ -109,6 +108,11 @@ public class BattleCityView extends FunGameView {
      * 当前难度等级内消灭的敌方坦克数量
      */
     private int wipeOutNum;
+
+    /**
+     * 表示第一次标示值，用于添加第一辆敌方坦克逻辑
+     */
+    private boolean once = true;
 
     public BattleCityView(Context context) {
         this(context, null);
@@ -155,16 +159,14 @@ public class BattleCityView extends FunGameView {
         levelNum = DEFAULT_TANK_MAGIC_TOTAL_NUM;
         wipeOutNum = 0;
 
+        once = true;
+
         enemyTankSpace = controllerSize + barrelSize + DEFAULT_ENEMY_TANK_NUM_SPACING;
         bulletSpace = DEFAULT_BULLET_NUM_SPACING;
 
         eTankSparseArray = new SparseArray<>();
-        int option = apperanceOption();
         for (int i = 0; i < TANK_ROW_NUM; i++) {
             Queue<RectF> rectFQueue = new LinkedList<>();
-            if (i == option) {
-                rectFQueue.offer(generateEnemyTank(i));
-            }
             eTankSparseArray.put(i, rectFQueue);
         }
 
@@ -187,6 +189,7 @@ public class BattleCityView extends FunGameView {
      * @param canvas 默认画布
      */
     private void makeBulletPath(Canvas canvas) {
+        mPaint.setColor(mModelColor);
         offsetMBulletX += bulletSpeed;
         if (offsetMBulletX / bulletSpace == 1) {
             offsetMBulletX = 0;
@@ -297,6 +300,7 @@ public class BattleCityView extends FunGameView {
      * @param canvas 默认画布
      */
     private void drawSelfTank(Canvas canvas) {
+        mPaint.setColor(rModelColor);
         boolean isAboveCrash = checkTankCrash(getTrackIndex((int) controllerPosition),
                 screenWidth - controllerSize,
                 controllerPosition);
@@ -320,21 +324,20 @@ public class BattleCityView extends FunGameView {
                 mPaint);
     }
 
-
     /**
      * 绘制三条轨道上的敌方坦克
      * @param canvas 默认画布
      */
     private void drawEnemyTank(Canvas canvas) {
-        mPaint.setColor(Color.parseColor("#909090"));
+        mPaint.setColor(lModelColor);
         offsetETankX += enemySpeed;
-        if (offsetETankX / enemyTankSpace == 1) {
+        if (offsetETankX / enemyTankSpace == 1 || once) {
             offsetETankX = 0;
+            once = false;
         }
 
         boolean isOverstep = false;
         int option = apperanceOption();
-
         for (int i = 0; i < TANK_ROW_NUM; i++) {
             Queue<RectF> rectFQueue = eTankSparseArray.get(i);
 
