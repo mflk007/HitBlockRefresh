@@ -63,6 +63,8 @@ public class FunGameRefreshView extends LinearLayout implements View.OnTouchList
      */
     private ListView listView;
 
+
+
     /**
      * 下拉控件布局参数
      */
