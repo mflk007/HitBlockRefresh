@@ -4,13 +4,14 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 
 import java.util.concurrent.Executors;
 
@@ -58,12 +59,8 @@ public class FunGameRefreshView extends LinearLayout implements View.OnTouchList
      */
     private FunGameHeader header;
 
-    /**
-     * 需要去下拉刷新的ListView
-     */
-    private ListView listView;
 
-
+    private RecyclerView recyclerView;
 
     /**
      * 下拉控件布局参数
@@ -129,8 +126,8 @@ public class FunGameRefreshView extends LinearLayout implements View.OnTouchList
             hideHeaderHeight = -header.getHeight();
             headerLayoutParams = (MarginLayoutParams) header.getLayoutParams();
             headerLayoutParams.topMargin = hideHeaderHeight;
-            listView = (ListView) getChildAt(1);
-            listView.setOnTouchListener(this);
+            recyclerView = (RecyclerView) getChildAt(1);
+            recyclerView.setOnTouchListener(this);
             once = true;
         }
     }
@@ -205,9 +202,9 @@ public class FunGameRefreshView extends LinearLayout implements View.OnTouchList
      * 禁用ListView，让其失去焦点不可接受点击
      */
     private void disableListView() {
-        listView.setPressed(false);
-        listView.setFocusable(false);
-        listView.setFocusableInTouchMode(false);
+        recyclerView.setPressed(false);
+        recyclerView.setFocusable(false);
+        recyclerView.setFocusableInTouchMode(false);
     }
 
     /**
@@ -239,9 +236,12 @@ public class FunGameRefreshView extends LinearLayout implements View.OnTouchList
      * @param event
      */
     private void checkAblePull(MotionEvent event) {
-        View firstChild = listView.getChildAt(0);
+        View firstChild = recyclerView.getChildAt(0);
         if (firstChild != null) {
-            int firstVisiblePos = listView.getFirstVisiblePosition();
+            int firstVisiblePos = 0;
+            if(recyclerView.getLayoutManager() instanceof  LinearLayoutManager) {
+                firstVisiblePos = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+            }
             if (firstVisiblePos == 0 && firstChild.getTop() == 0) {
                 // 如果首个元素的上边缘，距离父布局值为0，就说明ListView滚动到了最顶部，此时应该允许下拉刷新
                 if (!ableToPull) {
